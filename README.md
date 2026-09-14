@@ -1,2 +1,2 @@
-# prompteria
+# PROMPTERIA
 Simple reusable prompt gallery
