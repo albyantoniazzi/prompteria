@@ -1,5 +1,40 @@
 [
   {
+    "id": "pr_1789384704168_c9two",
+    "createdAt": 1789384704168,
+    "imageUrl": "./images/pr_1789384651506_vsdvt.webp",
+    "prompt": "const DESTINATION = \"Kaohsiung\";\nconst prompt = `\nCreate a bold hand-drawn travel art poster for Kaohsiung. Format: vertical 3:4 poster.\nBefore composing the image, identify the destination’s most recognizable, emblematic, and visually distinctive characteristics. Prioritize features that make Kaohsiung immediately identifiable. Use only the strongest and most place-specific elements.\nDesign the image as a vibrant contemporary screen-print and risograph-style city portrait, combining expressive illustration, simplified architecture, naïve drawing, and imperfect handmade print textures.\nPlace the destination name \"KHH\" in very large, bold custom lettering across the upper-left area. The title should be a major visual element and remain clearly readable.\nBuild a dense, vertically layered composition as one continuous illustrated cityscape. Interweave landmarks, architecture, terrain, vegetation, roads, water, and everyday urban life naturally. Do not arrange landmarks as isolated icons.\nCreate a clear hierarchy:\n- one dominant geographic or architectural feature\n- two or three secondary iconic landmarks\n- smaller local details for rhythm, atmosphere, and authenticity\nUse exaggerated scale and simplified perspective rather than realistic proportions.\nVisual style:\n- contemporary hand-drawn travel poster\n- screen-print, risograph, linocut, and wax-crayon character\n- rough expressive outlines\n- irregular handmade shapes\n- visible ink grain and dry-brush texture\n- slightly misregistered color layers\n- energetic scribbled shading\n- simplified architectural details\n- playful but sophisticated editorial composition\n- dense visual storytelling\nUse a tightly controlled palette of 4 to 5 harmonized colors that feel distinctive to Kaohsiung. Build the palette with one dominant hue, one complementary or analogous supporting hue, one warm accent color, one dark contrast tone, and optionally one light neutral tone. The colors should feel curated, balanced, and visually complementary, not random or muddy.\nApply the colors as flat overlapping ink layers on a clean bright white background. Maintain strong contrast and visual rhythm. Fill most of the page with illustration while preserving a narrow clean white margin around the outer edges.\nInclude only the title \"KHH\". Do not add any other text.\nAvoid photorealism, realistic digital painting, 3D rendering, smooth vector graphics, gradients, glossy surfaces, perfect architectural precision, isolated landmark collages, excessive empty space, generic postcard imagery, invented landmarks, and corporate tourism branding.\n`;",
+    "model": "chatgpt",
+    "tags": [
+      "illustration",
+      "poster"
+    ],
+    "updatedAt": 1789384704168
+  },
+  {
+    "id": "pr_1789384593801_vp26l",
+    "createdAt": 1789384593801,
+    "imageUrl": "./images/pr_1789384592206_gr0ey.webp",
+    "prompt": "Create one independent premium poster per photo and output each separately.Never combine multiple photos.Use a vertical 3:4 canvas divided into two strictly equal horizontal panels,top 50% and bottom 50%.Keep the split obvious. Top half:Keep the upload photographic.Preserve subject identity,count,pose,real texture,natural light and shadow,and original color mood.Apply only subtle editorial grading for an art-magazine feel.You may gently extend the environment to fit 3:4,but never stretch,mirror,distort,or redesign the subject or scene. Bottom half:Extract the most recognizable subject,silhouette,pose,and narrative relationship from the photo and rebuild them as a relaxed awkward Korean-style flat editorial illustration.Keep the general layout and core action,but remove realistic lighting,perspective depth,and material detail.Simplify people,animals,objects,and buildings into rounded,clear,slightly exaggerated geometric forms with bold wobbly hand-drawn black outlines,occasional broken edges,and flat solid fills.The lower image must still read as the same moment shown above. Composition:Keep one clear visual center and use the rest as supporting accents.Create rhythm through scale contrast,overlap,partial cropping,and loose asymmetry.Use broad areas of bright flat background and negative space around the subject.Avoid dense scenery or detailed backgrounds.The result should feel like a designed picture-book or indie editorial illustration. Color:Sample the brightest and most recognizable colors from the photo and turn them into a limited set of bright flat color blocks.You may use vivid blue,red,yellow,green,white,and related hues when supported by the source,but do not force one fixed palette.Keep the color clean,friendly,and lively,with strong contrast between subject and background.Avoid gradients,heavy shadows,muddy gray,dirty mixing,plastic gloss,or dull desaturation. Typography:All readable text must be in English only.Create one short English title from the subject,action,emotion,or story,and add a few brief English phrases,numbers,or playful notes.The title may feel slightly hand-lettered,uneven,or gently tilted,while smaller text stays restrained and legible.Place text along the subject contour,color-block edge,negative space,or layout axis,with mild rotation or misalignment so it feels embedded in the illustration.Keep text concise and avoid big commercial headlines. Overall feeling:Real photography above + awkward flat illustration below + lighthearted editorial design.Bright,childlike,friendly,and playful while still clean,graphic,and tasteful. Negative:No multi-photo collage,no unequal split,no realistic redraw,no glossy 3D,no polished vector smoothness,no complex perspective,no dense detail,no muddy palette,no realistic shading,no anime,no manga,no cheap souvenir feeling,no watermark,no logo,no UI.",
+    "model": "chatgpt",
+    "tags": [
+      "illustration"
+    ],
+    "updatedAt": 1789384593801
+  },
+  {
+    "id": "pr_1789384072023_14f50",
+    "createdAt": 1789384072023,
+    "imageUrl": "./images/pr_1789384045491_z0308.webp",
+    "prompt": "Balanced monochrome calligram illustration on warm off-white paper, featuring a small simplified [HUMAN] wearing [CLOTHING], accompanied by a small [ANIMAL], within a gently developed [SCENERY].\nConstruct the entire scene exclusively from tiny black printed words and very short phrases, using typography itself as the drawing material. Keep the human and animal small, delicate, and slightly abstract rather than realistic, but make them clearly readable as figures.\n\nForm the human primarily from tiny words related to [HUMAN THEMES]; form the clothing from [CLOTHING WORDS]; form the animal from [ANIMAL WORDS]. Build the scenery from a restrained set of short words related to [SCENERY WORDS].\n\nUse thin rows of tiny type as contour lines and pathways; compact clusters of words for silhouettes; repeated short words for foliage, grass, ripples, clouds, stones, or terrain; and gently curved baselines to create flow, movement, and depth. Let some elements remain airy and partially open, while others become slightly denser to anchor the composition.\n\nMaintain a balanced composition with roughly 45–60% untouched blank paper. Concentrate the calligram around the characters, a main ground line or path, and a few secondary environmental forms such as a tree, hill, shoreline, cloud, or distant structure.\n\nIntegrate the exact phrase \"creative direction and prompt by @p2nda\" once, small and legible, as part of a natural typographic contour within the scene.\n\nBlack typography only, warm ivory textured paper, delicate ink impression, controlled visual density, asymmetrical composition, generous negative space, quiet poetic narrative, elegant handcrafted calligram illustration. 4:5",
+    "model": "chatgpt",
+    "tags": [
+      "illustration",
+      "type"
+    ],
+    "updatedAt": 1789384072023
+  },
+  {
     "id": "pr_1789370846882_s2ub7",
     "createdAt": 1789370846882,
     "imageUrl": "./images/pr_1789370836752_91m0b.webp",
