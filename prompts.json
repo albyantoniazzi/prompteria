@@ -1,25 +1,27 @@
-
 [
   {
-    "id": "pr_1789360072712_dyemn",
-    "createdAt": 1789360072712,
-    "date": "2026-09-14",
-    "imageUrl": "https://instagram.fkhh1-1.fna.fbcdn.net/v/t51.82787-15/801056261_17984265132098538_3807065307019509891_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ig_cache_key=Mzk4MTU0OTI5ODQ2NjU0NjE0OQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4Ni5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=6N6WB5tIAhEQ7kNvwFjk0qv&_nc_oc=AdoCBE96d9qiW3ykJkp7p5M2LvQ4i7lw-BwEUUljvMmLiyCN6iAtlkkzgbEjvMZqZOs&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fkhh1-1.fna&_nc_gid=HA1oJyOIDmgm1k5SbRDUCA&_nc_ss=7a22e&oh=00_AQLuAO1dVmKGGTPsdU8B5Vx9p0llGBsBDhqu65InI3taiw&oe=6AAD3C83",
+    "id": "pr_1789370393816_a1ys1",
+    "createdAt": 1789370393816,
+    "imageUrl": "./images/pr_1789370374150_udto3.webp",
     "prompt": "Transform the uploaded photograph into a sophisticated vintage Japanese travel poster illustration while faithfully preserving the original scene, composition, perspective, architecture, vehicles, landmarks, and key recognizable details.\nReinterpret the photograph using bold geometric shapes, simplified architectural forms, clean hard-edged silhouettes, strong perspective lines, and elegant flat graphic design.\nStyle inspired by mid-century Japanese railway tourism posters, 1960s–1970s graphic design, retro Shinkansen advertising, and classic screen-printed travel posters.\nReduce photographic details into carefully designed graphic shapes without losing the identity of the original location. Preserve distinctive elements from the source photo rather than inventing a completely different scene.\nUse a restrained vintage color palette dominated by deep navy blue, warm ivory / aged paper cream, muted golden yellow, and vermilion red accents. Avoid gradients, glossy effects, neon colors, and modern digital illustration aesthetics.\nAdd subtle screen-print texture, slightly uneven ink coverage, fine paper grain, and gentle vintage print imperfections. The result should feel authentically printed rather than digitally filtered.\nEmphasize dramatic perspective and architectural geometry. Simplify people into elegant minimal silhouettes when present. Vehicles, trains, buildings, streets, signs, and structural elements should become clean graphic forms.\nLeave a generous typographic area near the bottom of the composition.\nAdd a large bold uppercase destination title:\n“[LOCATION]”\nBelow it, add a small widely spaced subtitle:\n“[SUBTITLE]”\nAt the bottom, include subtle editorial details such as:\n“2026” on the left and “No.01” on the right.\nTypography should feel like a refined vintage Japanese tourism publication: bold geometric sans-serif headline, generous letter spacing, carefully balanced hierarchy.\nVertical poster composition, approximately 3:4 ratio. Premium editorial design, minimalist, collectible travel print, sophisticated and timeless.\nImportant: Do not simply apply a poster filter to the photograph. Reconstruct the photograph as an intentional graphic illustration while maintaining the visual identity and perspective of the original scene.",
-    "model": "ChatGPT, Gemini",
-    "tags": ["illustration", "japan"],
-    "updatedAt": 1789360114919
+    "model": "chatgpt, gemini",
+    "tags": [
+      "illustration",
+      "japan",
+      "taiwan"
+    ],
+    "updatedAt": 1789370393816
   },
   {
     "id": "pr_1789359023694_15oac",
     "createdAt": 1789359023694,
-    "date": "2026-09-14",
     "imageUrl": "https://instagram.fkhh1-1.fna.fbcdn.net/v/t51.82787-15/798537586_18086719616401241_1090569547798325295_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=Mzk4MDkzNDQ2NTAzMTMxNTA5Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTEyMi5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=3zNMQo9xO_IQ7kNvwHy3_4-&_nc_oc=AdomiunS6TdIjy3JtwIJHaPg18Q4k3rtpWoGqlRRthCWAsVT3vv7-W2OWsEJsymKtec&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=instagram.fkhh1-1.fna&_nc_gid=zI-Fj7OtFShqQh_3yHUeiQ&_nc_ss=7a22e&oh=00_AQLOn7Celj4w87pDhNm7rql1B3a2_S1MuF8fvTuyOANmBg&oe=6AAD35D2",
     "prompt": "Sophisticated mid-century modern editorial poster illustration. Extremely flat 2D graphic composition with geometric planar reduction, compressed space, and zero volumetric shading. Bold silhouette-based design, crisp edges, screen-print lithograph aesthetic, and elegant negative space. Restrained palette of 4–6 solid flat colors (navy, ivory, vermilion, mustard, turquoise) with no gradients. Front-facing viewpoint, interlocking color blocks, no realistic lighting or 3D depth. Vertical 4:5 aspect ratio, no text.",
     "model": "ChatGPT",
-    "tags": ["japan", "illustration"],
+    "tags": [
+      "japan",
+      "illustration"
+    ],
     "updatedAt": 1789359114356
   }
 ]
-
-```
