@@ -383,11 +383,15 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'prompteria_archive_v3';
     let promptsList = [];
     const expandedPrompts = new Set();
     let currentSearchTerm = '';
     window.imageMemoryCache = window.imageMemoryCache || new Map();
+
+    // Clear any legacy test keys from older versions to prevent any cached placeholders
+    ['prompteria_archive_v3', 'prompteria_archive_v2', 'prompteria_archive', 'prompteria_items'].forEach(key => {
+      try { localStorage.removeItem(key); } catch (e) {}
+    });
 
     let pendingImageBlob = null;
     let pendingImageFilename = '';
@@ -491,20 +495,6 @@
       const isFileProtocol = window.location.protocol === 'file:';
       const helperBanner = document.getElementById('localFileHelperBanner');
 
-      // Load cached items from previous sessions
-      let localItems = [];
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            localItems = parsed.map(normalizePromptItem).filter(Boolean);
-          }
-        }
-      } catch (err) {
-        console.warn('LocalStorage read note:', err);
-      }
-
       const timestamp = Date.now();
       const targets = [
         `prompts.json?t=${timestamp}`,
@@ -534,19 +524,12 @@
           ? rawData 
           : (rawData.prompts || rawData.data || rawData.items || []);
 
-        if (Array.isArray(candidateList) && candidateList.length > 0) {
-          const remoteItems = candidateList.map(normalizePromptItem).filter(Boolean);
-          const remoteIds = new Set(remoteItems.map(item => item.id));
-          const unsavedLocal = localItems.filter(item => !remoteIds.has(item.id));
+        if (Array.isArray(candidateList)) {
+          // Strictly and exclusively load prompts from prompts.json (NO local placeholder merging)
+          promptsList = candidateList.map(normalizePromptItem).filter(Boolean);
 
-          promptsList = [...unsavedLocal, ...remoteItems];
-          const syncLabel = unsavedLocal.length > 0 
-            ? `synced (${remoteItems.length} remote, +${unsavedLocal.length} local)`
-            : `synced (prompts.json)`;
-
-          setSyncStatus('success', syncLabel);
+          setSyncStatus('success', `synced (prompts.json: ${promptsList.length})`);
           if (helperBanner) helperBanner.classList.add('hidden');
-          saveToStorage();
           renderCategoryTags();
           renderPromptList();
           return;
@@ -558,22 +541,12 @@
         if (helperBanner) helperBanner.classList.remove('hidden');
         setSyncStatus('warning', 'local file:// mode', 'Browser security restricts direct file:// fetch. Click "Select prompts.json" to load.');
       } else {
-        setSyncStatus('warning', 'local archive', 'Could not reach prompts.json directly. Showing local archive.');
+        setSyncStatus('warning', 'prompts.json not found', 'Could not read prompts.json in the same folder.');
       }
 
-      if (localItems.length > 0) {
-        promptsList = localItems;
-      }
+      promptsList = [];
       renderCategoryTags();
       renderPromptList();
-    }
-
-    function saveToStorage() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(promptsList));
-      } catch (err) {
-        console.warn('LocalStorage quota note:', err);
-      }
     }
 
     function renderCategoryTags() {
@@ -884,16 +857,10 @@
 
       if (pendingImageDataUrl) {
         window.imageMemoryCache.set(finalImageUrl, pendingImageDataUrl);
-        try {
-          localStorage.setItem(`cache_${finalImageUrl}`, pendingImageDataUrl);
-        } catch (e) {
-          console.warn('Local image cache note:', e);
-        }
       }
 
-      // Add to front of archive and render immediately
+      // Add to front of current prompt feed for immediate export
       promptsList.unshift(newEntry);
-      saveToStorage();
       renderCategoryTags();
       renderPromptList();
 
@@ -1144,11 +1111,10 @@
       promptsList[index].tags = parsedTags;
       promptsList[index].updatedAt = now;
 
-      saveToStorage();
       renderCategoryTags();
       renderPromptList();
       closeEditModal();
-      showToast('Prompt updated');
+      showToast('Prompt updated. Click "export" to save to prompts.json');
     }
 
     function openDeleteModal(promptId) {
@@ -1168,11 +1134,10 @@
       const id = document.getElementById('deletePromptId').value;
       promptsList = promptsList.filter(p => p.id !== id);
       expandedPrompts.delete(id);
-      saveToStorage();
       renderCategoryTags();
       renderPromptList();
       closeDeleteModal();
-      showToast('Prompt deleted');
+      showToast('Prompt removed. Click "export" to save to prompts.json');
     }
 
     function openLightbox(url) {
@@ -1235,7 +1200,6 @@
 
           if (Array.isArray(candidateList)) {
             promptsList = candidateList.map(normalizePromptItem).filter(Boolean);
-            saveToStorage();
             renderCategoryTags();
             renderPromptList();
             setSyncStatus('success', `loaded (${promptsList.length} items)`);
