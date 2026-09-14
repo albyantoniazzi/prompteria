@@ -149,7 +149,14 @@
 
         <!-- Right Side: Stats & Toggle Button -->
         <div class="flex items-center justify-between w-full sm:w-auto gap-4">
-          <span id="counterStats" class="text-xs text-arch-dim">0 entries</span>
+          <div class="flex items-center gap-2">
+            <span id="counterStats" class="text-xs text-arch-dim">0 entries</span>
+            <span id="syncStatusBadge" class="text-[11px] px-2 py-0.5 rounded border border-arch-border text-arch-dim flex items-center gap-1.5">
+              <span id="syncDot" class="w-2 h-2 rounded-full bg-arch-dim inline-block"></span>
+              <span id="syncStatusText">checking prompts.json...</span>
+              <button onclick="loadPrompts(true)" title="Force re-fetch prompts.json" class="text-arch-cyan hover:text-arch-neon ml-1 text-xs font-bold cursor-pointer">⟳</button>
+            </span>
+          </div>
           
           <!-- COLLAPSIBLE TRIGGER BUTTON -->
           <button 
@@ -282,7 +289,26 @@
   <!-- PROMPTS VERTICAL STREAM CONTAINER -->
   <section id="promptStream" class="flex flex-col gap-6">
       <!-- Injected dynamically by renderPromptList() -->
-    </section>
+  </section>
+
+  <!-- ERROR / DIAGNOSTIC BANNER (VISIBLE ONLY WHEN FETCH FAILS) -->
+  <div id="jsonErrorBanner" class="hidden max-w-4xl mx-auto w-full px-4 -mt-2">
+    <div class="p-3 bg-arch-900 border border-arch-amber/70 rounded text-xs text-arch-amber flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-sm">⚠</span>
+        <span id="jsonErrorMessage">Unable to load prompts.json</span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button onclick="loadPrompts(true)" class="px-2 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-amber text-xs text-arch-fg cursor-pointer">
+          Retry Fetch
+        </button>
+        <label class="px-2 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-xs text-arch-cyan cursor-pointer">
+          Load JSON File Manually
+          <input type="file" accept=".json" class="hidden" onchange="importDataJSON(event)">
+        </label>
+      </div>
+    </div>
+  </div>
 
   </main>
 
@@ -372,6 +398,38 @@
     let isComposerOpen = false;
     let dataSourceName = 'local';
     window.imageMemoryCache = new Map();
+
+    function setSyncStatus(status, label, tooltip = '') {
+      const badge = document.getElementById('syncStatusBadge');
+      const dot = document.getElementById('syncDot');
+      const text = document.getElementById('syncStatusText');
+      const banner = document.getElementById('jsonErrorBanner');
+      const bannerMsg = document.getElementById('jsonErrorMessage');
+
+      if (!badge || !dot || !text) return;
+
+      badge.title = tooltip || label;
+
+      if (status === 'success') {
+        dot.className = 'w-2 h-2 rounded-full bg-arch-emerald inline-block';
+        text.className = 'text-arch-emerald font-semibold';
+        text.textContent = label;
+        if (banner) banner.classList.add('hidden');
+      } else if (status === 'warning' || status === 'error') {
+        dot.className = 'w-2 h-2 rounded-full bg-arch-amber inline-block';
+        text.className = 'text-arch-amber font-semibold';
+        text.textContent = label;
+        if (banner && bannerMsg) {
+          bannerMsg.textContent = tooltip || label;
+          banner.classList.remove('hidden');
+        }
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-arch-dim inline-block';
+        text.className = 'text-arch-dim';
+        text.textContent = label;
+        if (banner) banner.classList.add('hidden');
+      }
+    }
 
     function toggleComposer(forceState) {
       const section = document.getElementById('composerSection');
@@ -475,67 +533,146 @@
       };
     }
 
-    async function loadPrompts() {
-      // First read locally stored edits/items to prevent losing unsynced items
+    async function fetchJsonCandidate(url) {
+      let resolvedUrl = url;
+      try {
+        // Explicitly resolve relative paths against window.location to prevent "Failed to parse URL" in sandboxed environments
+        resolvedUrl = new URL(url, window.location.href).href;
+      } catch (err) {
+        throw new Error(`Cannot resolve base URL: ${err.message}`);
+      }
+
+      const response = await fetch(resolvedUrl, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+      const rawText = await response.text();
+      try {
+        return JSON.parse(rawText);
+      } catch (parseErr) {
+        throw new Error(`JSON Syntax Error: ${parseErr.message}`);
+      }
+    }
+
+    async function loadPrompts(forceReload = false) {
+      setSyncStatus('loading', 'checking data...');
+
+      // Detect protocol and sandbox environment
+      const isHttpOrHttps = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+      const isFileProtocol = window.location.protocol === 'file:';
+      const isSandboxed = !isHttpOrHttps && !isFileProtocol;
+
+      // Read locally stored items from previous sessions
       let localItems = [];
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            localItems = parsed.map(normalizePromptItem).filter(Boolean);
+            localItems = parsed
+              .map(normalizePromptItem)
+              .filter(item => item && item.id !== 'sample-1' && item.id !== 'sample-2');
           }
         }
       } catch (err) {
-        console.warn('Error reading localStorage:', err);
+        console.warn('[PROMPTERIA] Error reading localStorage:', err);
       }
 
-      // Check if a custom JSON url was passed in query params: ?json=...
-      const urlParams = new URLSearchParams(window.location.search);
-      const customJsonUrl = urlParams.get('json') || urlParams.get('src');
-      const fetchTarget = customJsonUrl || `./prompts.json?t=${Date.now()}`;
-
+      // Check if custom URL parameter is provided (?json=... or ?src=...)
+      let customUrl = null;
       try {
-        console.info(`[PROMPTERIA] Fetching archive from: ${fetchTarget}`);
-        const response = await fetch(fetchTarget, { cache: 'no-store' });
-        
-        if (response.ok) {
-          const rawData = await response.json();
-          // Support raw array [ ... ] or object wrappers { "prompts": [ ... ] } or { "data": [ ... ] }
-          const candidateList = Array.isArray(rawData) 
-            ? rawData 
-            : (rawData.prompts || rawData.data || rawData.items || []);
-
-          if (Array.isArray(candidateList) && candidateList.length > 0) {
-            const remoteItems = candidateList.map(normalizePromptItem).filter(Boolean);
-
-            // Merge: preserve locally added prompts that are not yet committed to remote prompts.json
-            const remoteIds = new Set(remoteItems.map(item => item.id));
-            const unsyncedLocalItems = localItems.filter(item => !remoteIds.has(item.id));
-
-            promptsList = [...unsyncedLocalItems, ...remoteItems];
-            dataSourceName = customJsonUrl ? 'remote-url' : 'prompts.json';
-            console.info(`[PROMPTERIA] Loaded ${remoteItems.length} remote and ${unsyncedLocalItems.length} local items.`);
-            saveToStorage(); // cache a copy locally for offline viewing
-            renderCategoryTags();
-            renderPromptList();
-            return;
-          }
-        } else {
-          console.warn(`[PROMPTERIA] Response status ${response.status} when fetching ${fetchTarget}`);
+        if (window.location.search) {
+          const urlParams = new URLSearchParams(window.location.search);
+          customUrl = urlParams.get('json') || urlParams.get('src');
         }
-      } catch (err) {
-        console.warn('[PROMPTERIA] Remote fetch not available, reading local storage...', err);
+      } catch (e) {
+        // Ignore search param errors in sandboxes
       }
 
-      // Fallback: Read from localStorage if running offline or prompts.json is not yet uploaded
+      // If in sandbox/blob/opaque environment and no absolute custom URL is given, avoid relative fetch failure
+      const canAttemptFetch = (customUrl && (customUrl.startsWith('http://') || customUrl.startsWith('https://'))) || isHttpOrHttps;
+
+      if (!canAttemptFetch) {
+        if (isFileProtocol) {
+          setSyncStatus('warning', 'local file:// (use web server)', 'Local file:// protocol restricts direct fetch. Run via a web server or use ↑ import.');
+        } else {
+          setSyncStatus('neutral', 'preview mode (local archive)', 'Running in preview environment. When deployed on GitHub Pages, prompts.json will load automatically.');
+        }
+        
+        if (localItems.length > 0) {
+          promptsList = localItems;
+          dataSourceName = 'localStorage';
+        } else {
+          promptsList = DEFAULT_SAMPLE_PROMPTS.map(normalizePromptItem);
+          dataSourceName = 'sample';
+        }
+        renderCategoryTags();
+        renderPromptList();
+        return;
+      }
+
+      const timestamp = Date.now();
+      const targets = customUrl 
+        ? [customUrl] 
+        : [
+            `prompts.json?t=${timestamp}`,
+            `./prompts.json?t=${timestamp}`,
+            `prompts.json`
+          ];
+
+      let rawData = null;
+      let successfulUrl = null;
+      let lastError = null;
+
+      for (const target of targets) {
+        try {
+          rawData = await fetchJsonCandidate(target);
+          successfulUrl = target;
+          break;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+
+      if (rawData) {
+        const candidateList = Array.isArray(rawData) 
+          ? rawData 
+          : (rawData.prompts || rawData.data || rawData.items || []);
+
+        if (Array.isArray(candidateList) && candidateList.length > 0) {
+          const remoteItems = candidateList.map(normalizePromptItem).filter(Boolean);
+
+          const remoteIds = new Set(remoteItems.map(item => item.id));
+          const unsavedLocal = localItems.filter(item => !remoteIds.has(item.id));
+
+          promptsList = [...unsavedLocal, ...remoteItems];
+          dataSourceName = 'prompts.json';
+
+          const syncMsg = unsavedLocal.length > 0 
+            ? `synced (${remoteItems.length} remote, +${unsavedLocal.length} local)`
+            : `synced (prompts.json)`;
+
+          setSyncStatus('success', syncMsg);
+          saveToStorage();
+          renderCategoryTags();
+          renderPromptList();
+          showToast(`Loaded ${remoteItems.length} prompts from prompts.json`);
+          return;
+        } else {
+          setSyncStatus('warning', 'prompts.json is empty', 'File loaded successfully but contained no prompt entries.');
+        }
+      } else {
+        const errorDetail = lastError ? lastError.message : 'File not found';
+        console.warn('[PROMPTERIA] prompts.json not reachable:', errorDetail);
+        setSyncStatus('neutral', 'offline / local storage', `Could not fetch prompts.json (${errorDetail}). Using local storage.`);
+      }
+
       if (localItems.length > 0) {
         promptsList = localItems;
         dataSourceName = 'localStorage';
-      } else if (!promptsList || promptsList.length === 0) {
+      } else {
         promptsList = DEFAULT_SAMPLE_PROMPTS.map(normalizePromptItem);
         dataSourceName = 'sample';
-        saveToStorage();
       }
 
       renderCategoryTags();
@@ -950,8 +1087,7 @@
         return pMatch || mMatch || tMatch;
       });
 
-      const sourceBadge = dataSourceName === 'prompts.json' ? ' [synced]' : '';
-      counter.textContent = `${filtered.length} / ${promptsList.length} entries${sourceBadge}`;
+      counter.textContent = `${filtered.length} / ${promptsList.length} entries`;
 
       if (filtered.length === 0) {
         container.innerHTML = `
