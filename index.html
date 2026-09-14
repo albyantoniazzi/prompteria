@@ -341,6 +341,7 @@
     const expandedPrompts = new Set();
     let currentSearchTerm = '';
     let isComposerOpen = false;
+    let dataSourceName = 'local';
 
     const DEFAULT_SAMPLE_PROMPTS = [
       {
@@ -348,7 +349,7 @@
         prompt: "Cinematic portrait shot of an ethereal celestial traveler in obsidian armor, intricate luminous cybernetic filigree, volumetric mist, photorealistic reflections, dark moody lighting, 8k resolution, shot on 35mm Hasselblad --ar 16:9 --style raw --v 6.1",
         imageUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200&auto=format&fit=crop&q=80",
         model: "Midjourney v6.1",
-        tags: "portrait, scifi, armor, moody",
+        tags: ["portrait", "scifi", "armor", "moody"],
         createdAt: 1718000000000
       },
       {
@@ -356,72 +357,100 @@
         prompt: "Minimalist brutalist architecture surrounded by an overgrown midnight pine forest, misty rain, amber interior lamp lighting, harsh geometrical concrete angles, hyper-detailed architectural photograph, architectural digest style.",
         imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80",
         model: "Flux.1 Dev",
-        tags: "architecture, minimalist, brutalism",
+        tags: ["architecture", "minimalist", "brutalism"],
         createdAt: 1718100000000
       }
     ];
 
-    /* Toggle Add Prompt composer visibility */
-    function toggleComposer(forceState = null) {
-      const section = document.getElementById('composerSection');
-      const icon = document.getElementById('composerToggleIcon');
-      const text = document.getElementById('composerToggleText');
-      const btn = document.getElementById('toggleComposerBtn');
+    /* Normalizes entries from any JSON structure (array or object, flexible keys) */
+    function normalizePromptItem(item, idx) {
+      if (!item || typeof item !== 'object') return null;
 
-      isComposerOpen = forceState !== null ? forceState : !isComposerOpen;
-
-      if (isComposerOpen) {
-        section.classList.remove('hidden');
-        section.classList.add('flex');
-        icon.textContent = '✕';
-        text.textContent = 'CLOSE COMPOSER';
-        btn.classList.add('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
-        btn.classList.remove('text-arch-dim', 'bg-arch-850');
-        document.getElementById('inputImageUrl').focus();
-      } else {
-        section.classList.add('hidden');
-        section.classList.remove('flex');
-        icon.textContent = '+';
-        text.textContent = 'ADD PROMPT';
-        btn.classList.remove('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
-        btn.classList.add('text-arch-dim', 'bg-arch-850');
+      const promptText = item.prompt || item.promptText || item.text || item.content || '';
+      const imgUrl = item.imageUrl || item.image || item.img || item.url || '';
+      const engineModel = item.model || item.engine || 'General';
+      
+      // Parse tags whether provided as ["tag1", "tag2"] or "tag1, tag2"
+      let parsedTags = [];
+      if (Array.isArray(item.tags)) {
+        parsedTags = item.tags.map(t => String(t).trim()).filter(Boolean);
+      } else if (typeof item.tags === 'string') {
+        parsedTags = item.tags.split(',').map(t => t.trim()).filter(Boolean);
       }
+
+      // Format date / timestamp safely
+      let dateDisplay = '';
+      if (item.date) {
+        dateDisplay = String(item.date);
+      } else if (item.createdAt) {
+        dateDisplay = new Date(item.createdAt).toLocaleDateString();
+      } else {
+        dateDisplay = new Date().toLocaleDateString();
+      }
+
+      return {
+        id: item.id !== undefined ? String(item.id) : 'p-' + (idx + 1) + '-' + Date.now(),
+        prompt: promptText,
+        imageUrl: imgUrl || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA',
+        model: engineModel,
+        tags: parsedTags,
+        dateDisplay: dateDisplay,
+        createdAt: item.createdAt || (item.date ? new Date(item.date).getTime() : Date.now())
+      };
     }
 
     async function loadPrompts() {
-      // 1. Try to load from remote prompts.json (if hosted on GitHub Pages)
+      // Check if a custom JSON url was passed in query params: ?json=...
+      const urlParams = new URLSearchParams(window.location.search);
+      const customJsonUrl = urlParams.get('json') || urlParams.get('src');
+      const fetchTarget = customJsonUrl || `./prompts.json?t=${Date.now()}`;
+
       try {
-        const response = await fetch('prompts.json', { cache: 'no-cache' });
+        console.info(`[PROMPTERIA] Fetching archive from: ${fetchTarget}`);
+        const response = await fetch(fetchTarget, { cache: 'no-store' });
+        
         if (response.ok) {
-          const remoteData = await response.json();
-          if (Array.isArray(remoteData) && remoteData.length > 0) {
-            promptsList = remoteData;
+          const rawData = await response.json();
+          // Support raw array [ ... ] or object wrappers { "prompts": [ ... ] } or { "data": [ ... ] }
+          const candidateList = Array.isArray(rawData) 
+            ? rawData 
+            : (rawData.prompts || rawData.data || rawData.items || []);
+
+          if (Array.isArray(candidateList) && candidateList.length > 0) {
+            promptsList = candidateList.map(normalizePromptItem).filter(Boolean);
+            dataSourceName = customJsonUrl ? 'remote-url' : 'prompts.json';
+            console.info(`[PROMPTERIA] Successfully loaded ${promptsList.length} items from ${dataSourceName}`);
+            saveToStorage(); // cache a copy locally for offline viewing
             renderCategoryTags();
             renderPromptList();
             return;
           }
+        } else {
+          console.warn(`[PROMPTERIA] Response status ${response.status} when fetching ${fetchTarget}`);
         }
-      } catch (e) {
-        // Not hosted with prompts.json or running locally without server; fallback to local storage
+      } catch (err) {
+        console.warn('[PROMPTERIA] Remote fetch not available, reading local storage...', err);
       }
 
-      // 2. Fallback to localStorage or sample presets
+      // Fallback: Read from localStorage if running offline or prompts.json is not yet uploaded
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
-          promptsList = JSON.parse(stored);
-        } else {
-          const legacy = localStorage.getItem('prompteria_archive_v2') || localStorage.getItem('prompteria_archive');
-          if (legacy) {
-            promptsList = JSON.parse(legacy);
-          } else {
-            promptsList = [...DEFAULT_SAMPLE_PROMPTS];
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            promptsList = parsed.map(normalizePromptItem).filter(Boolean);
+            dataSourceName = 'localStorage';
           }
-          saveToStorage();
         }
       } catch (err) {
-        console.error('Error loading prompts:', err);
-        promptsList = [...DEFAULT_SAMPLE_PROMPTS];
+        console.error('Error reading localStorage:', err);
+      }
+
+      // Default sample prompts if completely empty
+      if (!promptsList || promptsList.length === 0) {
+        promptsList = DEFAULT_SAMPLE_PROMPTS.map(normalizePromptItem);
+        dataSourceName = 'sample';
+        saveToStorage();
       }
 
       renderCategoryTags();
@@ -649,7 +678,8 @@
         return pMatch || mMatch || tMatch;
       });
 
-      counter.textContent = `${filtered.length} / ${promptsList.length} entries`;
+      const sourceBadge = dataSourceName === 'prompts.json' ? ' [synced]' : '';
+      counter.textContent = `${filtered.length} / ${promptsList.length} entries${sourceBadge}`;
 
       if (filtered.length === 0) {
         container.innerHTML = `
@@ -676,6 +706,7 @@
 
         const isExpanded = expandedPrompts.has(item.id);
         const clampClass = isExpanded ? '' : 'prompt-clamp';
+        const displayDate = item.dateDisplay || new Date(item.createdAt || Date.now()).toLocaleDateString();
 
         return `
           <article class="prompt-entry group bg-arch-900 rounded-lg arch-border overflow-hidden flex flex-col transition-all duration-200" data-id="${item.id}">
@@ -689,7 +720,7 @@
                   title="Filter by this engine">
                   # ${item.model || 'General'}
                 </button>
-                <span class="text-arch-dim text-[11px]">• ${new Date(item.createdAt || Date.now()).toLocaleDateString()}</span>
+                <span class="text-arch-dim text-[11px]">• ${displayDate}</span>
               </div>
               
               <div class="flex items-center gap-2">
