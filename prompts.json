@@ -1,16 +1,14 @@
 [
   {
-    "id": "pr_1789370393816_a1ys1",
-    "createdAt": 1789370393816,
-    "imageUrl": "./images/pr_1789370374150_udto3.webp",
+    "id": "pr_1789370846882_s2ub7",
+    "createdAt": 1789370846882,
+    "imageUrl": "./images/pr_1789370836752_91m0b.webp",
     "prompt": "Transform the uploaded photograph into a sophisticated vintage Japanese travel poster illustration while faithfully preserving the original scene, composition, perspective, architecture, vehicles, landmarks, and key recognizable details.\nReinterpret the photograph using bold geometric shapes, simplified architectural forms, clean hard-edged silhouettes, strong perspective lines, and elegant flat graphic design.\nStyle inspired by mid-century Japanese railway tourism posters, 1960s–1970s graphic design, retro Shinkansen advertising, and classic screen-printed travel posters.\nReduce photographic details into carefully designed graphic shapes without losing the identity of the original location. Preserve distinctive elements from the source photo rather than inventing a completely different scene.\nUse a restrained vintage color palette dominated by deep navy blue, warm ivory / aged paper cream, muted golden yellow, and vermilion red accents. Avoid gradients, glossy effects, neon colors, and modern digital illustration aesthetics.\nAdd subtle screen-print texture, slightly uneven ink coverage, fine paper grain, and gentle vintage print imperfections. The result should feel authentically printed rather than digitally filtered.\nEmphasize dramatic perspective and architectural geometry. Simplify people into elegant minimal silhouettes when present. Vehicles, trains, buildings, streets, signs, and structural elements should become clean graphic forms.\nLeave a generous typographic area near the bottom of the composition.\nAdd a large bold uppercase destination title:\n“[LOCATION]”\nBelow it, add a small widely spaced subtitle:\n“[SUBTITLE]”\nAt the bottom, include subtle editorial details such as:\n“2026” on the left and “No.01” on the right.\nTypography should feel like a refined vintage Japanese tourism publication: bold geometric sans-serif headline, generous letter spacing, carefully balanced hierarchy.\nVertical poster composition, approximately 3:4 ratio. Premium editorial design, minimalist, collectible travel print, sophisticated and timeless.\nImportant: Do not simply apply a poster filter to the photograph. Reconstruct the photograph as an intentional graphic illustration while maintaining the visual identity and perspective of the original scene.",
     "model": "chatgpt, gemini",
     "tags": [
-      "illustration",
-      "japan",
-      "taiwan"
+      "illustration"
     ],
-    "updatedAt": 1789370393816
+    "updatedAt": 1789370846882
   },
   {
     "id": "pr_1789359023694_15oac",
