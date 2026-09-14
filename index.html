@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PROMPTERIA</title>
-  
-  <!-- Favicon with Pin Emoji 📌 -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📌</text></svg>">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -88,10 +85,6 @@
     .arch-border {
       border: 1px solid #1f2e42;
     }
-    .arch-border-active {
-      border: 1px solid #1793d1;
-    }
-
     .glow-cyan {
       text-shadow: 0 0 12px rgba(23, 147, 209, 0.45);
     }
@@ -104,18 +97,20 @@
       
       <!-- Main Logo Title -->
       <div class="flex items-center gap-2">
-        <h1 onclick="clearSearch()" class="text-xl sm:text-2xl font-bold tracking-wider text-arch-cyan glow-cyan cursor-pointer" title="Click to reset filters">
+        <h1 onclick="clearSearch()" class="text-xl sm:text-2xl font-bold tracking-wider text-arch-cyan glow-cyan cursor-pointer hover:opacity-90 transition-opacity" title="Click to reset filters">
           PROMPTERIA
         </h1>
       </div>
 
       <!-- Actions: Export / Import -->
       <div class="flex items-center gap-2 text-xs">
-        <button onclick="exportDataJSON()" class="px-2.5 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-fg transition-all">
-          ↓ export
+        <button id="exportBtnHeader" onclick="exportDataJSON()" class="px-2.5 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan transition-all flex items-center gap-1.5 cursor-pointer" title="Download updated prompts.json for GitHub">
+          <span>↓</span>
+          <span>export</span>
         </button>
-        <label class="px-2.5 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-fg cursor-pointer transition-all">
-          ↑ import
+        <label class="px-2.5 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-fg cursor-pointer transition-all flex items-center gap-1.5" title="Load a prompts.json file">
+          <span>↑</span>
+          <span>import</span>
           <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
         </label>
       </div>
@@ -141,19 +136,19 @@
           <button 
             id="clearFilterBtn"
             onclick="clearSearch()" 
-            class="absolute right-2.5 text-xs text-arch-dim hover:text-arch-fg hidden"
+            class="absolute right-2.5 text-xs text-arch-dim hover:text-arch-fg hidden cursor-pointer"
             title="Clear filter">
             ✕
           </button>
         </div>
 
         <!-- Right Side: Stats & Toggle Button -->
-        <div class="flex items-center justify-between w-full sm:w-auto gap-4">
+        <div class="flex items-center justify-between w-full sm:w-auto gap-3">
           <div class="flex items-center gap-2">
             <span id="counterStats" class="text-xs text-arch-dim">0 entries</span>
-            <span id="syncStatusBadge" class="text-[11px] px-2 py-0.5 rounded border border-arch-border text-arch-dim flex items-center gap-1.5">
+            <span id="syncStatusBadge" class="text-[11px] px-2 py-0.5 rounded border border-arch-border text-arch-dim flex items-center gap-1.5 cursor-default">
               <span id="syncDot" class="w-2 h-2 rounded-full bg-arch-dim inline-block"></span>
-              <span id="syncStatusText">checking prompts.json...</span>
+              <span id="syncStatusText">loading...</span>
               <button onclick="loadPrompts(true)" title="Force re-fetch prompts.json" class="text-arch-cyan hover:text-arch-neon ml-1 text-xs font-bold cursor-pointer">⟳</button>
             </span>
           </div>
@@ -163,7 +158,7 @@
             id="toggleComposerBtn" 
             type="button"
             onclick="toggleComposer()" 
-            class="px-3.5 py-1.5 rounded bg-arch-850 hover:bg-arch-800 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan text-xs font-semibold tracking-wide transition-all shadow flex items-center gap-1.5 active:scale-95 cursor-pointer">
+            class="px-3.5 py-1.5 rounded bg-arch-850 hover:bg-arch-800 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan text-xs font-semibold tracking-wide transition-all shadow flex items-center gap-1.5 active:scale-95 cursor-pointer shrink-0">
             <span id="composerToggleIcon" class="text-arch-cyan font-bold">+</span>
             <span id="composerToggleText">ADD PROMPT</span>
           </button>
@@ -171,148 +166,144 @@
       </div>
 
       <!-- Quick Category / Hashtag Chips Bar -->
-    <div id="categoryTagsBar" class="flex flex-wrap items-center gap-1.5 px-1 min-h-[22px]">
-      <!-- Injected dynamically by renderCategoryTags() -->
-    </div>
-  </div>
-
-  <!-- COLLAPSIBLE COMPOSER CONTAINER (HIDDEN BY DEFAULT) -->
-  <section 
-    id="composerSection" 
-    class="hidden bg-arch-900/95 border border-arch-cyan/60 rounded-lg p-4 sm:p-5 shadow-2xl flex-col gap-4 transition-all duration-300">
-    
-    <div class="flex items-center justify-between border-b border-arch-border/70 pb-2">
-      <div class="flex items-center gap-2 text-xs text-arch-cyan font-bold tracking-wide">
-        <span>❯</span>
-        <span>NEW_ENTRY_COMPOSER</span>
-        <span id="imageModeBadge" class="text-[10px] text-arch-dim font-normal">[paste image or enter url]</span>
+      <div id="categoryTagsBar" class="flex flex-wrap items-center gap-1.5 px-1 min-h-[22px]">
+        <!-- Injected dynamically by renderCategoryTags() -->
       </div>
-      <button 
-        type="button"
-        onclick="toggleComposer(false)" 
-        class="text-xs text-arch-dim hover:text-arch-red font-mono transition-colors cursor-pointer">
-        [✕ close]
-      </button>
     </div>
 
-    <!-- Image Input, Drag/Drop & Preview Area -->
-    <div class="flex flex-col sm:flex-row gap-3 items-start">
-      <div class="flex-1 w-full flex flex-col gap-2">
-        
-        <!-- Drag & Drop / Paste Target Zone -->
-        <div 
-          id="imageDropZone"
-          onclick="document.getElementById('fileUploadInput').click()"
-          class="border border-dashed border-arch-border hover:border-arch-cyan bg-arch-950/70 hover:bg-arch-950 rounded p-3 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-1">
-          <input type="file" id="fileUploadInput" accept="image/*" class="hidden" onchange="if(this.files && this.files[0]) handleFileSelect(this.files[0])">
-          <span class="text-xs text-arch-fg font-medium">📋 Paste image anywhere (<kbd class="px-1 py-0.5 bg-arch-850 rounded text-[10px] text-arch-cyan">Ctrl+V</kbd>) or drag &amp; drop</span>
-          <span class="text-[10px] text-arch-dim">click to select an image file from your device</span>
+    <!-- COLLAPSIBLE COMPOSER CONTAINER (HIDDEN BY DEFAULT) -->
+    <section 
+      id="composerSection" 
+      class="hidden flex-col gap-4 bg-arch-900/95 border border-arch-cyan/60 rounded-lg p-4 sm:p-5 shadow-2xl transition-all duration-200">
+      
+      <div class="flex items-center justify-between border-b border-arch-border/70 pb-2">
+        <div class="flex items-center gap-2 text-xs text-arch-cyan font-bold tracking-wide">
+          <span>❯</span>
+          <span>NEW_ENTRY_COMPOSER</span>
+          <span id="imageModeBadge" class="text-[10px] text-arch-dim font-normal">[paste image or enter url/path]</span>
         </div>
+        <button 
+          type="button"
+          onclick="toggleComposer(false)" 
+          class="text-xs text-arch-dim hover:text-arch-red font-mono transition-colors cursor-pointer">
+          [✕ close]
+        </button>
+      </div>
 
-        <!-- Or fallback Image URL input -->
-        <div class="flex flex-col gap-1">
-          <label class="text-[11px] text-arch-dim font-medium">Or paste an Image URL</label>
-          <div class="flex items-center gap-2">
-            <input 
-              type="url" 
-              id="inputImageUrl" 
-              placeholder="https://... or auto-filled upon pasting image"
-              oninput="handleImagePreview(this.value)"
-              class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
-            <button 
-              id="downloadImageBtn"
-              type="button"
-              onclick="downloadCurrentPastedImage()" 
-              title="Download the pasted WebP file to put in your GitHub images/ folder"
-              class="hidden shrink-0 px-2.5 py-1.5 bg-arch-850 border border-arch-border hover:border-arch-cyan text-[11px] text-arch-dim hover:text-arch-cyan rounded transition-colors">
-              ↓ dl webp
-            </button>
+      <!-- Image Input, Drag/Drop & Preview Area -->
+      <div class="flex flex-col sm:flex-row gap-3 items-start">
+        <div class="flex-1 w-full flex flex-col gap-2">
+          
+          <!-- Drag & Drop / Paste Target Zone -->
+          <div 
+            id="imageDropZone"
+            onclick="document.getElementById('fileUploadInput').click()"
+            class="border border-dashed border-arch-border hover:border-arch-cyan bg-arch-950/70 hover:bg-arch-950 rounded p-3 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-1">
+            <input type="file" id="fileUploadInput" accept="image/*" class="hidden" onchange="if(this.files && this.files[0]) handleFileSelect(this.files[0])">
+            <span class="text-xs text-arch-fg font-medium">📋 Paste image anywhere (<kbd class="px-1 py-0.5 bg-arch-850 rounded text-[10px] text-arch-cyan">Ctrl+V</kbd>) or drag &amp; drop</span>
+            <span class="text-[10px] text-arch-dim">or click here to select an image from your computer</span>
           </div>
+
+          <!-- Fallback / Image Path input -->
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] text-arch-dim font-medium">Image URL or Local Path (e.g. <code class="text-arch-cyan">./images/photo.webp</code>)</label>
+            <div class="flex items-center gap-2">
+              <input 
+                type="text" 
+                id="inputImageUrl" 
+                placeholder="./images/example.webp or https://..."
+                oninput="handleImagePreview(this.value)"
+                class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+              <button 
+                id="downloadImageBtn"
+                type="button"
+                onclick="downloadCurrentPastedImage()" 
+                title="Download the WebP file to place into your repo's images/ directory"
+                class="hidden shrink-0 px-2.5 py-1.5 bg-arch-850 border border-arch-border hover:border-arch-cyan text-[11px] text-arch-dim hover:text-arch-cyan rounded transition-colors cursor-pointer">
+                ↓ dl webp
+              </button>
+            </div>
+          </div>
+
         </div>
 
+        <!-- Thumbnail preview box -->
+        <div id="newImagePreviewWrapper" class="w-full sm:w-36 h-28 bg-arch-950 border border-arch-border rounded overflow-hidden flex items-center justify-center shrink-0">
+          <img id="newImagePreview" src="" alt="preview" class="hidden w-full h-full object-cover">
+          <span id="newImagePlaceholder" class="text-[10px] text-arch-dim text-center px-2">no image preview</span>
+        </div>
       </div>
 
-      <!-- Thumbnail preview box -->
-      <div id="newImagePreviewWrapper" class="w-full sm:w-36 h-28 bg-arch-950 border border-arch-border rounded overflow-hidden flex items-center justify-center shrink-0">
-        <img id="newImagePreview" src="" alt="preview" class="hidden w-full h-full object-cover">
-        <span id="newImagePlaceholder" class="text-[10px] text-arch-dim text-center px-2">no image preview</span>
+      <!-- Prompt Textarea -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-arch-dim font-medium">Prompt Content <span class="text-arch-cyan">*</span></label>
+        <textarea 
+          id="inputPromptText" 
+          rows="4" 
+          placeholder="Paste prompt text here (cinematic portrait of a cyberpunk wanderer, neon glow, octane render...)"
+          class="w-full bg-arch-950 border border-arch-border rounded p-3 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors resize-y leading-relaxed"></textarea>
       </div>
-    </div>
 
-    <!-- Prompt Textarea -->
-    <div class="flex flex-col gap-1.5">
-      <label class="text-xs text-arch-dim font-medium">Prompt Content <span class="text-arch-cyan">*</span></label>
-      <textarea 
-        id="inputPromptText" 
-        rows="4" 
-        placeholder="Paste prompt text here (cinematic portrait of a cyberpunk wanderer, neon glow, octane render...)"
-        class="w-full bg-arch-950 border border-arch-border rounded p-3 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors resize-y leading-relaxed"></textarea>
-    </div>
-
-    <!-- Extra fields: Model & Tags -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <div class="flex flex-col gap-1">
-        <label class="text-[11px] text-arch-dim">Model / Engine (optional)</label>
-        <input 
-          type="text" 
-          id="inputModel" 
-          placeholder="Midjourney v6.1 / Flux.1 / ChatGPT" 
-          class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+      <!-- Extra fields: Model & Tags -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] text-arch-dim">Model / Engine (optional)</label>
+          <input 
+            type="text" 
+            id="inputModel" 
+            placeholder="Midjourney v6.1 / Flux.1 / ChatGPT" 
+            class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] text-arch-dim">Tags (comma-separated, e.g. portrait, scifi)</label>
+          <input 
+            type="text" 
+            id="inputTags" 
+            placeholder="illustration, japan, retro" 
+            class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+        </div>
       </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-[11px] text-arch-dim">Tags (comma-separated, e.g. portrait, scifi)</label>
-        <input 
-          type="text" 
-          id="inputTags" 
-          placeholder="portrait, anime, landscape, 3d" 
-          class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end items-center gap-3 pt-1 border-t border-arch-border/40">
+        <button 
+          type="button"
+          onclick="toggleComposer(false)" 
+          class="px-4 py-1.5 rounded border border-arch-border hover:border-arch-dim text-arch-dim hover:text-arch-fg text-xs transition-colors cursor-pointer">
+          Cancel
+        </button>
+        <button 
+          type="button"
+          onclick="saveNewPrompt()" 
+          class="px-5 py-1.5 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs tracking-wide transition-all shadow active:scale-95 flex items-center gap-1.5 cursor-pointer">
+          <span>+</span>
+          <span>ADD TO ARCHIVE</span>
+        </button>
       </div>
-    </div>
+    </section>
 
-    <!-- Action Buttons -->
-    <div class="flex justify-end items-center gap-3 pt-1 border-t border-arch-border/40">
-      <button 
-        type="button"
-        onclick="toggleComposer(false)" 
-        class="px-4 py-1.5 rounded border border-arch-border hover:border-arch-dim text-arch-dim hover:text-arch-fg text-xs transition-colors cursor-pointer">
-        Cancel
-      </button>
-      <button 
-        type="button"
-        onclick="saveNewPrompt()" 
-        class="px-5 py-1.5 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs tracking-wide transition-all shadow active:scale-95 flex items-center gap-1.5 cursor-pointer">
-        <span>+</span>
-        <span>ADD TO ARCHIVE</span>
-      </button>
-    </div>
-  </section>
-
-  <!-- PROMPTS VERTICAL STREAM CONTAINER -->
-  <section id="promptStream" class="flex flex-col gap-6">
-      <!-- Injected dynamically by renderPromptList() -->
-  </section>
-
-  <!-- ERROR / DIAGNOSTIC BANNER (VISIBLE ONLY WHEN FETCH FAILS) -->
-  <div id="jsonErrorBanner" class="hidden max-w-4xl mx-auto w-full px-4 -mt-2">
-    <div class="p-3 bg-arch-900 border border-arch-amber/70 rounded text-xs text-arch-amber flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <span class="font-bold text-sm">⚠</span>
-        <span id="jsonErrorMessage">Unable to load prompts.json</span>
+    <!-- LOCAL FILE / DIAGNOSTIC HELPER BANNER -->
+    <div id="localFileHelperBanner" class="hidden w-full p-3 bg-arch-900 border border-arch-cyan/50 rounded-lg text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+      <div class="flex items-center gap-2 text-arch-fg">
+        <span class="text-arch-cyan font-bold">📁 LOCAL FILE DETECTED</span>
+        <span class="text-arch-dim">Using local <code class="text-arch-fg">file://</code> protocol. If your browser blocks reading <code class="text-arch-fg">prompts.json</code>:</span>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <button onclick="loadPrompts(true)" class="px-2 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-amber text-xs text-arch-fg cursor-pointer">
-          Retry Fetch
-        </button>
-        <label class="px-2 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-xs text-arch-cyan cursor-pointer">
-          Load JSON File Manually
+        <label class="px-2.5 py-1 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs cursor-pointer transition-colors">
+          Select prompts.json
           <input type="file" accept=".json" class="hidden" onchange="importDataJSON(event)">
         </label>
       </div>
     </div>
-  </div>
+
+    <!-- PROMPTS VERTICAL STREAM CONTAINER -->
+    <section id="promptStream" class="flex flex-col gap-6">
+      <!-- Injected dynamically by renderPromptList() -->
+    </section>
 
   </main>
 
+  <!-- FOOTER -->
   <footer class="mt-auto border-t border-arch-border bg-arch-950 py-4 text-center text-xs text-arch-dim">
     <div class="max-w-4xl mx-auto px-4 flex flex-col items-center gap-1">
       <span class="text-arch-cyan font-bold tracking-widest text-[11px]">PROMPTERIA</span>
@@ -325,15 +316,15 @@
     <div class="bg-arch-900 border border-arch-cyan rounded-lg w-full max-w-xl p-5 shadow-2xl flex flex-col gap-4">
       <div class="flex items-center justify-between border-b border-arch-border pb-2">
         <span class="text-xs font-bold text-arch-cyan">[EDIT_ENTRY]</span>
-        <button onclick="closeEditModal()" class="text-arch-dim hover:text-arch-red font-bold text-xs">[esc / close]</button>
+        <button onclick="closeEditModal()" class="text-arch-dim hover:text-arch-red font-bold text-xs cursor-pointer">[esc / close]</button>
       </div>
 
       <input type="hidden" id="editPromptId">
 
       <div class="flex flex-col gap-1.5">
-        <label class="text-xs text-arch-dim">Image URL</label>
+        <label class="text-xs text-arch-dim">Image Path / URL</label>
         <input 
-          type="url" 
+          type="text" 
           id="editImageUrl" 
           oninput="handleEditImagePreview(this.value)"
           class="w-full bg-arch-950 border border-arch-border rounded px-3 py-2 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan">
@@ -362,8 +353,8 @@
       </div>
 
       <div class="flex justify-end gap-2 pt-2 border-t border-arch-border">
-        <button onclick="closeEditModal()" class="px-3 py-1.5 rounded border border-arch-border text-arch-dim hover:text-arch-fg text-xs">Cancel</button>
-        <button onclick="saveEditedPrompt()" class="px-4 py-1.5 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs">Save Changes</button>
+        <button onclick="closeEditModal()" class="px-3 py-1.5 rounded border border-arch-border text-arch-dim hover:text-arch-fg text-xs cursor-pointer">Cancel</button>
+        <button onclick="saveEditedPrompt()" class="px-4 py-1.5 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs cursor-pointer">Save Changes</button>
       </div>
     </div>
   </div>
@@ -372,11 +363,11 @@
   <div id="deleteModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
     <div class="bg-arch-900 border border-arch-red rounded-lg w-full max-w-sm p-5 shadow-2xl flex flex-col gap-4 text-center">
       <div class="text-arch-red font-bold text-sm">[CONFIRM_DELETE]</div>
-      <p class="text-xs text-arch-dim">Are you sure you want to permanently delete this prompt from your archive?</p>
+      <p class="text-xs text-arch-dim">Are you sure you want to permanently delete this prompt?</p>
       <input type="hidden" id="deletePromptId">
       <div class="flex justify-center gap-3 pt-2">
-        <button onclick="closeDeleteModal()" class="px-3 py-1.5 rounded border border-arch-border text-arch-dim hover:text-arch-fg text-xs">Cancel</button>
-        <button onclick="confirmDeletePrompt()" class="px-4 py-1.5 rounded bg-arch-red hover:bg-red-600 text-white font-bold text-xs">Delete</button>
+        <button onclick="closeDeleteModal()" class="px-3 py-1.5 rounded border border-arch-border text-arch-dim hover:text-arch-fg text-xs cursor-pointer">Cancel</button>
+        <button onclick="confirmDeletePrompt()" class="px-4 py-1.5 rounded bg-arch-red hover:bg-red-600 text-white font-bold text-xs cursor-pointer">Delete</button>
       </div>
     </div>
   </div>
@@ -396,39 +387,32 @@
     let promptsList = [];
     const expandedPrompts = new Set();
     let currentSearchTerm = '';
-    let isComposerOpen = false;
-    let dataSourceName = 'local';
-    window.imageMemoryCache = new Map();
+    window.imageMemoryCache = window.imageMemoryCache || new Map();
+
+    let pendingImageBlob = null;
+    let pendingImageFilename = '';
+    let pendingImageDataUrl = '';
 
     function setSyncStatus(status, label, tooltip = '') {
       const badge = document.getElementById('syncStatusBadge');
       const dot = document.getElementById('syncDot');
       const text = document.getElementById('syncStatusText');
-      const banner = document.getElementById('jsonErrorBanner');
-      const bannerMsg = document.getElementById('jsonErrorMessage');
 
       if (!badge || !dot || !text) return;
-
       badge.title = tooltip || label;
 
       if (status === 'success') {
         dot.className = 'w-2 h-2 rounded-full bg-arch-emerald inline-block';
         text.className = 'text-arch-emerald font-semibold';
         text.textContent = label;
-        if (banner) banner.classList.add('hidden');
       } else if (status === 'warning' || status === 'error') {
         dot.className = 'w-2 h-2 rounded-full bg-arch-amber inline-block';
         text.className = 'text-arch-amber font-semibold';
         text.textContent = label;
-        if (banner && bannerMsg) {
-          bannerMsg.textContent = tooltip || label;
-          banner.classList.remove('hidden');
-        }
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-arch-dim inline-block';
         text.className = 'text-arch-dim';
         text.textContent = label;
-        if (banner) banner.classList.add('hidden');
       }
     }
 
@@ -439,93 +423,60 @@
       const btn = document.getElementById('toggleComposerBtn');
       if (!section) return;
 
-      // Determine state directly from DOM to prevent boolean desync
-      const isCurrentlyOpen = !section.classList.contains('hidden') && section.style.display !== 'none';
-      const shouldOpen = typeof forceState === 'boolean' ? forceState : !isCurrentlyOpen;
-
-      isComposerOpen = shouldOpen;
+      const currentlyHidden = section.classList.contains('hidden');
+      const shouldOpen = typeof forceState === 'boolean' ? forceState : currentlyHidden;
 
       if (shouldOpen) {
         section.classList.remove('hidden');
-        section.style.display = 'flex';
         if (icon) icon.textContent = '✕';
         if (text) text.textContent = 'CLOSE';
-        if (btn) {
-          btn.classList.add('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
-        }
+        if (btn) btn.classList.add('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
         setTimeout(() => {
           const promptInput = document.getElementById('inputPromptText');
           if (promptInput) promptInput.focus();
-        }, 60);
+        }, 50);
       } else {
         section.classList.add('hidden');
-        section.style.display = 'none';
         if (icon) icon.textContent = '+';
         if (text) text.textContent = 'ADD PROMPT';
-        if (btn) {
-          btn.classList.remove('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
-        }
+        if (btn) btn.classList.remove('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
       }
     }
 
-    // Holds in-memory image blob and target filename for newly pasted/dropped images
-    let pendingImageBlob = null;
-    let pendingImageFilename = '';
-    let pendingImageDataUrl = '';
-
-    const DEFAULT_SAMPLE_PROMPTS = [
-      {
-        id: 'sample-1',
-        prompt: "Cinematic portrait shot of an ethereal celestial traveler in obsidian armor, intricate luminous cybernetic filigree, volumetric mist, photorealistic reflections, dark moody lighting, 8k resolution, shot on 35mm Hasselblad --ar 16:9 --style raw --v 6.1",
-        imageUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200&auto=format&fit=crop&q=80",
-        model: "Midjourney v6.1",
-        tags: ["portrait", "scifi", "armor", "moody"],
-        createdAt: 1718000000000
-      },
-      {
-        id: 'sample-2',
-        prompt: "Minimalist brutalist architecture surrounded by an overgrown midnight pine forest, misty rain, amber interior lamp lighting, harsh geometrical concrete angles, hyper-detailed architectural photograph, architectural digest style.",
-        imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80",
-        model: "Flux.1 Dev",
-        tags: ["architecture", "minimalist", "brutalism"],
-        createdAt: 1718100000000
-      }
-    ];
-
-    /* Normalizes entries from any JSON structure (array or object, flexible keys) */
     function normalizePromptItem(item, idx) {
       if (!item || typeof item !== 'object') return null;
 
       const now = Date.now();
       const promptText = item.prompt || item.promptText || item.text || item.content || '';
-      const imgUrl = item.imageUrl || item.image || item.img || item.url || '';
-      const engineModel = item.model || item.engine || 'General';
-      
-      // Parse tags whether provided as ["tag1", "tag2"] or "tag1, tag2"
-      let parsedTags = [];
-      if (Array.isArray(item.tags)) {
-        parsedTags = item.tags.map(t => String(t).trim()).filter(Boolean);
-      } else if (typeof item.tags === 'string') {
-        parsedTags = item.tags.split(',').map(t => t.trim()).filter(Boolean);
+      let rawImg = (item.imageUrl || item.image || item.img || item.url || '').trim();
+
+      // Normalize relative paths so they resolve identically on GitHub and local file systems
+      if (rawImg.startsWith('/images/')) {
+        rawImg = '.' + rawImg; // Convert /images/... to ./images/...
+      } else if (rawImg.startsWith('images/')) {
+        rawImg = './' + rawImg; // Convert images/... to ./images/...
       }
 
-      // Preserve existing timestamps or generate valid integer epoch timestamps
+      const engineModel = item.model || item.engine || 'General';
+      
+      let parsedTags = [];
+      if (Array.isArray(item.tags)) {
+        parsedTags = item.tags.map(t => String(t).trim().toLowerCase()).filter(Boolean);
+      } else if (typeof item.tags === 'string') {
+        parsedTags = item.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+      }
+
       const createdAt = typeof item.createdAt === 'number' 
         ? item.createdAt 
         : (item.date ? new Date(item.date).getTime() : (now - (idx || 0) * 1000));
 
-      const updatedAt = typeof item.updatedAt === 'number' 
-        ? item.updatedAt 
-        : createdAt;
-
-      const dateDisplay = item.date 
-        ? String(item.date) 
-        : new Date(createdAt).toLocaleDateString();
+      const updatedAt = typeof item.updatedAt === 'number' ? item.updatedAt : createdAt;
+      const dateDisplay = item.date || new Date(createdAt).toLocaleDateString();
 
       return {
         id: item.id !== undefined ? String(item.id) : `pr_${now}_${Math.random().toString(36).substring(2, 7)}`,
         createdAt: createdAt,
-        imageUrl: imgUrl || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA',
+        imageUrl: rawImg || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA',
         prompt: promptText,
         model: engineModel,
         tags: parsedTags,
@@ -534,102 +485,45 @@
       };
     }
 
-    async function fetchJsonCandidate(url) {
-      let resolvedUrl = url;
-      try {
-        // Explicitly resolve relative paths against window.location to prevent "Failed to parse URL" in sandboxed environments
-        resolvedUrl = new URL(url, window.location.href).href;
-      } catch (err) {
-        throw new Error(`Cannot resolve base URL: ${err.message}`);
-      }
-
-      const response = await fetch(resolvedUrl, { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status} ${response.statusText}`);
-      }
-      const rawText = await response.text();
-      try {
-        return JSON.parse(rawText);
-      } catch (parseErr) {
-        throw new Error(`JSON Syntax Error: ${parseErr.message}`);
-      }
-    }
-
     async function loadPrompts(forceReload = false) {
-      setSyncStatus('loading', 'checking data...');
+      setSyncStatus('loading', 'checking prompts.json...');
 
-      // Detect protocol and sandbox environment
-      const isHttpOrHttps = window.location.protocol === 'http:' || window.location.protocol === 'https:';
       const isFileProtocol = window.location.protocol === 'file:';
-      const isSandboxed = !isHttpOrHttps && !isFileProtocol;
+      const helperBanner = document.getElementById('localFileHelperBanner');
 
-      // Read locally stored items from previous sessions
+      // Load cached items from previous sessions
       let localItems = [];
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            localItems = parsed
-              .map(normalizePromptItem)
-              .filter(item => item && item.id !== 'sample-1' && item.id !== 'sample-2');
+            localItems = parsed.map(normalizePromptItem).filter(Boolean);
           }
         }
       } catch (err) {
-        console.warn('[PROMPTERIA] Error reading localStorage:', err);
-      }
-
-      // Check if custom URL parameter is provided (?json=... or ?src=...)
-      let customUrl = null;
-      try {
-        if (window.location.search) {
-          const urlParams = new URLSearchParams(window.location.search);
-          customUrl = urlParams.get('json') || urlParams.get('src');
-        }
-      } catch (e) {
-        // Ignore search param errors in sandboxes
-      }
-
-      // If in sandbox/blob/opaque environment and no absolute custom URL is given, avoid relative fetch failure
-      const canAttemptFetch = (customUrl && (customUrl.startsWith('http://') || customUrl.startsWith('https://'))) || isHttpOrHttps;
-
-      if (!canAttemptFetch) {
-        if (isFileProtocol) {
-          setSyncStatus('warning', 'local file:// (use web server)', 'Local file:// protocol restricts direct fetch. Run via a web server or use ↑ import.');
-        } else {
-          setSyncStatus('neutral', 'preview mode (local archive)', 'Running in preview environment. When deployed on GitHub Pages, prompts.json will load automatically.');
-        }
-        
-        if (localItems.length > 0) {
-          promptsList = localItems;
-          dataSourceName = 'localStorage';
-        } else {
-          promptsList = DEFAULT_SAMPLE_PROMPTS.map(normalizePromptItem);
-          dataSourceName = 'sample';
-        }
-        renderCategoryTags();
-        renderPromptList();
-        return;
+        console.warn('LocalStorage read note:', err);
       }
 
       const timestamp = Date.now();
-      const targets = customUrl 
-        ? [customUrl] 
-        : [
-            `prompts.json?t=${timestamp}`,
-            `./prompts.json?t=${timestamp}`,
-            `prompts.json`
-          ];
+      const targets = [
+        `prompts.json?t=${timestamp}`,
+        `./prompts.json?t=${timestamp}`,
+        `prompts.json`
+      ];
 
       let rawData = null;
-      let successfulUrl = null;
       let lastError = null;
 
       for (const target of targets) {
         try {
-          rawData = await fetchJsonCandidate(target);
-          successfulUrl = target;
-          break;
+          const resolvedUrl = new URL(target, window.location.href).href;
+          const response = await fetch(resolvedUrl, { cache: 'no-store' });
+          if (response.ok) {
+            const text = await response.text();
+            rawData = JSON.parse(text);
+            break;
+          }
         } catch (err) {
           lastError = err;
         }
@@ -642,40 +536,34 @@
 
         if (Array.isArray(candidateList) && candidateList.length > 0) {
           const remoteItems = candidateList.map(normalizePromptItem).filter(Boolean);
-
           const remoteIds = new Set(remoteItems.map(item => item.id));
           const unsavedLocal = localItems.filter(item => !remoteIds.has(item.id));
 
           promptsList = [...unsavedLocal, ...remoteItems];
-          dataSourceName = 'prompts.json';
-
-          const syncMsg = unsavedLocal.length > 0 
+          const syncLabel = unsavedLocal.length > 0 
             ? `synced (${remoteItems.length} remote, +${unsavedLocal.length} local)`
             : `synced (prompts.json)`;
 
-          setSyncStatus('success', syncMsg);
+          setSyncStatus('success', syncLabel);
+          if (helperBanner) helperBanner.classList.add('hidden');
           saveToStorage();
           renderCategoryTags();
           renderPromptList();
-          showToast(`Loaded ${remoteItems.length} prompts from prompts.json`);
           return;
-        } else {
-          setSyncStatus('warning', 'prompts.json is empty', 'File loaded successfully but contained no prompt entries.');
         }
+      }
+
+      // If fetch failed on local file:// due to browser CORS security:
+      if (isFileProtocol) {
+        if (helperBanner) helperBanner.classList.remove('hidden');
+        setSyncStatus('warning', 'local file:// mode', 'Browser security restricts direct file:// fetch. Click "Select prompts.json" to load.');
       } else {
-        const errorDetail = lastError ? lastError.message : 'File not found';
-        console.warn('[PROMPTERIA] prompts.json not reachable:', errorDetail);
-        setSyncStatus('neutral', 'offline / local storage', `Could not fetch prompts.json (${errorDetail}). Using local storage.`);
+        setSyncStatus('warning', 'local archive', 'Could not reach prompts.json directly. Showing local archive.');
       }
 
       if (localItems.length > 0) {
         promptsList = localItems;
-        dataSourceName = 'localStorage';
-      } else {
-        promptsList = DEFAULT_SAMPLE_PROMPTS.map(normalizePromptItem);
-        dataSourceName = 'sample';
       }
-
       renderCategoryTags();
       renderPromptList();
     }
@@ -684,22 +572,18 @@
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(promptsList));
       } catch (err) {
-        console.error('Storage write error:', err);
+        console.warn('LocalStorage quota note:', err);
       }
     }
 
-    /* Clickable Category Tags Rendering & Filtering */
     function renderCategoryTags() {
       const bar = document.getElementById('categoryTagsBar');
       if (!bar) return;
 
       const tagSet = new Set();
       promptsList.forEach(item => {
-        if (item.tags) {
-          const tags = Array.isArray(item.tags) 
-            ? item.tags 
-            : item.tags.split(',').map(t => t.trim()).filter(Boolean);
-          tags.forEach(t => tagSet.add(t.toLowerCase()));
+        if (Array.isArray(item.tags)) {
+          item.tags.forEach(t => tagSet.add(t.toLowerCase()));
         }
       });
 
@@ -718,7 +602,7 @@
           return `
             <button 
               onclick="filterByTag('${tag.replace(/'/g, "\\'")}')" 
-              class="px-2 py-0.5 rounded text-[11px] transition-all border ${
+              class="px-2 py-0.5 rounded text-[11px] transition-all border cursor-pointer ${
                 isActive 
                   ? 'bg-arch-cyan text-arch-950 border-arch-cyan font-bold' 
                   : 'bg-arch-850 hover:bg-arch-800 text-arch-dim hover:text-arch-cyan border-arch-border hover:border-arch-cyan'
@@ -735,18 +619,16 @@
       if (currentSearchTerm.toLowerCase() === tag.toLowerCase()) {
         clearSearch();
       } else {
-        searchBox.value = tag;
+        if (searchBox) searchBox.value = tag;
         handleSearch(tag);
         const feed = document.getElementById('promptStream');
-        if (feed) {
-          feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (feed) feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
 
     function clearSearch() {
       const searchBox = document.getElementById('searchBox');
-      searchBox.value = '';
+      if (searchBox) searchBox.value = '';
       handleSearch('');
     }
 
@@ -767,163 +649,15 @@
 
     function showToast(text, isError = false) {
       const toast = document.getElementById('toast');
+      if (!toast) return;
       toast.textContent = text;
       toast.className = `fixed bottom-6 right-6 z-50 px-4 py-2 rounded font-bold text-xs shadow-xl transition-all duration-300 opacity-100 ${
         isError ? 'bg-arch-red text-white' : 'bg-arch-cyan text-arch-950'
       }`;
       setTimeout(() => {
         toast.className = 'fixed bottom-6 right-6 z-50 px-4 py-2 rounded bg-arch-cyan text-arch-950 font-bold text-xs shadow-xl opacity-0 pointer-events-none transition-all duration-300';
-      }, 2000);
+      }, 2500);
     }
-
-    /* Converts and compresses an image Blob into an optimized WebP blob */
-    async function compressImageToWebP(fileOrBlob, maxWidth = 1600, quality = 0.88) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => {
-            let width = img.width;
-            let height = img.height;
-
-            if (width > maxWidth) {
-              height = Math.round((height * maxWidth) / width);
-              width = maxWidth;
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob((blob) => {
-              if (blob) {
-                resolve({ blob, dataUrl: canvas.toDataURL('image/webp', quality) });
-              } else {
-                // Fallback to original if canvas toBlob fails
-                resolve({ blob: fileOrBlob, dataUrl: event.target.result });
-              }
-            }, 'image/webp', quality);
-          };
-          img.onerror = reject;
-          img.src = event.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(fileOrBlob);
-      });
-    }
-
-    /* Handles direct file upload or drag-and-drop */
-    async function handleFileSelect(file) {
-      if (!file || !file.type.startsWith('image/')) {
-        showToast('Please select a valid image file', true);
-        return;
-      }
-
-      showToast('Processing image...');
-      try {
-        const { blob, dataUrl } = await compressImageToWebP(file);
-        const now = Date.now();
-        const randSuffix = Math.random().toString(36).substring(2, 7);
-        const fileName = `pr_${now}_${randSuffix}.webp`;
-        const githubPath = `./images/${fileName}`;
-
-        pendingImageBlob = blob;
-        pendingImageFilename = fileName;
-        pendingImageDataUrl = dataUrl;
-
-        const inputUrl = document.getElementById('inputImageUrl');
-        if (inputUrl) inputUrl.value = githubPath;
-
-        const modeBadge = document.getElementById('imageModeBadge');
-        if (modeBadge) modeBadge.textContent = `[pasted: ${fileName}]`;
-
-        const downloadBtn = document.getElementById('downloadImageBtn');
-        if (downloadBtn) downloadBtn.classList.remove('hidden');
-
-        // Show preview using data URL
-        const img = document.getElementById('newImagePreview');
-        const placeholder = document.getElementById('newImagePlaceholder');
-        if (img) {
-          img.src = dataUrl;
-          img.classList.remove('hidden');
-        }
-        if (placeholder) placeholder.classList.add('hidden');
-
-        showToast(`Image ready: ${fileName}`);
-      } catch (err) {
-        console.error('Image processing failed:', err);
-        showToast('Failed to process image', true);
-      }
-    }
-
-    /* Downloads the current pasted image file for GitHub repository */
-    function downloadCurrentPastedImage() {
-      if (!pendingImageBlob || !pendingImageFilename) {
-        showToast('No pasted image to download', true);
-        return;
-      }
-      triggerFileDownload(pendingImageBlob, pendingImageFilename);
-      showToast(`Downloaded ${pendingImageFilename}`);
-    }
-
-    function triggerFileDownload(blob, filename) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    /* Clipboard Paste Listener: Catch images copied to clipboard */
-    window.addEventListener('paste', async (event) => {
-      const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
-      if (!items) return;
-
-      for (const item of items) {
-        if (item.type.indexOf('image') !== -1) {
-          const file = item.getAsFile();
-          if (file) {
-            event.preventDefault();
-            // Automatically open composer if closed
-            if (!isComposerOpen) toggleComposer(true);
-            await handleFileSelect(file);
-            return;
-          }
-        }
-      }
-    });
-
-    /* Drag & Drop setup on drop zone */
-    window.addEventListener('DOMContentLoaded', () => {
-      const dropZone = document.getElementById('imageDropZone');
-      if (dropZone) {
-        ['dragenter', 'dragover'].forEach(name => {
-          dropZone.addEventListener(name, (e) => {
-            e.preventDefault();
-            dropZone.classList.add('border-arch-cyan', 'bg-arch-900');
-          });
-        });
-
-        ['dragleave', 'drop'].forEach(name => {
-          dropZone.addEventListener(name, (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('border-arch-cyan', 'bg-arch-900');
-          });
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-          const files = e.dataTransfer.files;
-          if (files && files.length > 0) {
-            handleFileSelect(files[0]);
-          }
-        });
-      }
-    });
 
     function copyTextToClipboard(text) {
       const textArea = document.createElement('textarea');
@@ -939,7 +673,7 @@
       try {
         successful = document.execCommand('copy');
       } catch (err) {
-        console.warn('execCommand fallback', err);
+        console.warn('execCommand fallback note:', err);
       }
       document.body.removeChild(textArea);
 
@@ -966,21 +700,141 @@
 
         showToast('Prompt copied to clipboard');
       }).catch(() => {
-        showToast('Failed to copy', true);
+        showToast('Failed to copy prompt', true);
       });
     }
+
+    async function compressImageToWebP(fileOrBlob, maxWidth = 1600, quality = 0.88) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve({ blob, dataUrl: canvas.toDataURL('image/webp', quality) });
+              } else {
+                resolve({ blob: fileOrBlob, dataUrl: event.target.result });
+              }
+            }, 'image/webp', quality);
+          };
+          img.onerror = reject;
+          img.src = event.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(fileOrBlob);
+      });
+    }
+
+    async function handleFileSelect(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showToast('Please select a valid image file', true);
+        return;
+      }
+
+      showToast('Processing image...');
+      try {
+        const { blob, dataUrl } = await compressImageToWebP(file);
+        const now = Date.now();
+        const randSuffix = Math.random().toString(36).substring(2, 7);
+        const fileName = `pr_${now}_${randSuffix}.webp`;
+        const localPath = `./images/${fileName}`;
+
+        pendingImageBlob = blob;
+        pendingImageFilename = fileName;
+        pendingImageDataUrl = dataUrl;
+
+        const inputUrl = document.getElementById('inputImageUrl');
+        if (inputUrl) inputUrl.value = localPath;
+
+        const modeBadge = document.getElementById('imageModeBadge');
+        if (modeBadge) modeBadge.textContent = `[pasted: ${fileName}]`;
+
+        const downloadBtn = document.getElementById('downloadImageBtn');
+        if (downloadBtn) downloadBtn.classList.remove('hidden');
+
+        const img = document.getElementById('newImagePreview');
+        const placeholder = document.getElementById('newImagePlaceholder');
+        if (img) {
+          img.src = dataUrl;
+          img.classList.remove('hidden');
+        }
+        if (placeholder) placeholder.classList.add('hidden');
+
+        showToast(`Image ready: ${fileName}`);
+      } catch (err) {
+        console.error('Image processing failed:', err);
+        showToast('Failed to process image', true);
+      }
+    }
+
+    function downloadCurrentPastedImage() {
+      if (!pendingImageBlob || !pendingImageFilename) {
+        showToast('No pasted image to download', true);
+        return;
+      }
+      triggerFileDownload(pendingImageBlob, pendingImageFilename);
+      showToast(`Downloaded ${pendingImageFilename}`);
+    }
+
+    function triggerFileDownload(blob, filename) {
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.warn('File download warning:', err);
+      }
+    }
+
+    // Capture clipboard image paste anywhere on page
+    window.addEventListener('paste', async (event) => {
+      const items = (event.clipboardData || event.originalEvent?.clipboardData)?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            event.preventDefault();
+            toggleComposer(true);
+            await handleFileSelect(file);
+            return;
+          }
+        }
+      }
+    });
 
     function handleImagePreview(url) {
       const img = document.getElementById('newImagePreview');
       const placeholder = document.getElementById('newImagePlaceholder');
-      if (url && url.trim().length > 4) {
+      if (url && url.trim().length > 3) {
         img.src = url.trim();
         img.classList.remove('hidden');
         placeholder.classList.add('hidden');
         img.onerror = () => {
           img.classList.add('hidden');
           placeholder.classList.remove('hidden');
-          placeholder.textContent = 'invalid image url';
+          placeholder.textContent = 'unresolved image';
         };
         img.onload = () => {
           img.classList.remove('hidden');
@@ -1011,10 +865,11 @@
 
       const now = Date.now();
       const randomSuffix = Math.random().toString(36).substring(2, 7);
-      const parsedTags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(Boolean) : [];
+      const parsedTags = tagsString ? tagsString.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
 
-      // Determine final image URL
-      const finalImageUrl = imageUrl || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA+ARCHIVE';
+      let finalImageUrl = imageUrl || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA';
+      if (finalImageUrl.startsWith('/images/')) finalImageUrl = '.' + finalImageUrl;
+      else if (finalImageUrl.startsWith('images/')) finalImageUrl = './' + finalImageUrl;
 
       const newEntry = {
         id: `pr_${now}_${randomSuffix}`,
@@ -1027,32 +882,26 @@
         dateDisplay: new Date(now).toLocaleDateString()
       };
 
-      // Cache local data URL in memory and storage for immediate offline preview
       if (pendingImageDataUrl) {
         window.imageMemoryCache.set(finalImageUrl, pendingImageDataUrl);
         try {
           localStorage.setItem(`cache_${finalImageUrl}`, pendingImageDataUrl);
         } catch (e) {
-          console.warn('Image cache quota note:', e);
+          console.warn('Local image cache note:', e);
         }
       }
 
-      // Add new entry to the front of the archive feed and re-render immediately
+      // Add to front of archive and render immediately
       promptsList.unshift(newEntry);
       saveToStorage();
       renderCategoryTags();
       renderPromptList();
 
-      // Trigger download of image file safely inside try/catch so sandbox restrictions don't block saving
       if (pendingImageBlob && pendingImageFilename) {
-        try {
-          triggerFileDownload(pendingImageBlob, pendingImageFilename);
-        } catch (downloadErr) {
-          console.warn('Automatic download suppressed by sandbox environment:', downloadErr);
-        }
+        triggerFileDownload(pendingImageBlob, pendingImageFilename);
       }
 
-      // Reset form fields
+      // Reset composer inputs
       if (promptInput) promptInput.value = '';
       if (urlInput) urlInput.value = '';
       if (modelInput) modelInput.value = '';
@@ -1060,7 +909,7 @@
 
       const pBadge = document.getElementById('imageModeBadge');
       const pDlBtn = document.getElementById('downloadImageBtn');
-      if (pBadge) pBadge.textContent = '[paste image or enter url]';
+      if (pBadge) pBadge.textContent = '[paste image or enter url/path]';
       if (pDlBtn) pDlBtn.classList.add('hidden');
 
       pendingImageBlob = null;
@@ -1068,16 +917,36 @@
       pendingImageDataUrl = '';
       handleImagePreview('');
 
-      // Collapse composer automatically after saving
       toggleComposer(false);
 
-      showToast('Entry added to archive!');
+      showToast('Saved! Click "↓ export" to update prompts.json for GitHub');
 
-      // Scroll to newly added item
       const stream = document.getElementById('promptStream');
-      if (stream) {
-        stream.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (stream) stream.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function handleImageLoadError(img) {
+      const originalSrc = img.getAttribute('data-src') || img.getAttribute('src');
+      
+      const inMem = window.imageMemoryCache && window.imageMemoryCache.get(originalSrc);
+      if (inMem && img.src !== inMem) {
+        img.src = inMem;
+        return;
       }
+
+      const cached = localStorage.getItem('cache_' + originalSrc);
+      if (cached && img.src !== cached) {
+        img.src = cached;
+        return;
+      }
+
+      // If relative without leading dot, try with leading dot
+      if (originalSrc && !originalSrc.startsWith('http') && !originalSrc.startsWith('./') && !originalSrc.startsWith('data:')) {
+        img.src = './' + originalSrc;
+        return;
+      }
+
+      img.src = 'https://placehold.co/800x450/070a0f/1793d1?text=Preview+Image+Unavailable';
     }
 
     function renderPromptList() {
@@ -1085,11 +954,10 @@
       const counter = document.getElementById('counterStats');
       const clearBtn = document.getElementById('clearFilterBtn');
 
-      if (clearBtn) {
-        clearBtn.classList.toggle('hidden', !currentSearchTerm);
-      }
+      if (!container) return;
+      if (clearBtn) clearBtn.classList.toggle('hidden', !currentSearchTerm);
 
-      const filterTerm = currentSearchTerm.toLowerCase();
+      const filterTerm = currentSearchTerm.toLowerCase().trim();
       const filtered = promptsList.filter(item => {
         if (!filterTerm) return true;
         const pMatch = (item.prompt || '').toLowerCase().includes(filterTerm);
@@ -1099,14 +967,14 @@
         return pMatch || mMatch || tMatch;
       });
 
-      counter.textContent = `${filtered.length} / ${promptsList.length} entries`;
+      if (counter) counter.textContent = `${filtered.length} / ${promptsList.length} entries`;
 
       if (filtered.length === 0) {
         container.innerHTML = `
           <div class="p-8 text-center border border-dashed border-arch-border rounded-lg text-arch-dim">
             <div class="text-base font-bold text-arch-cyan mb-1">NO ENTRIES FOUND</div>
             <p class="text-xs mb-3">No matching prompts found for "${currentSearchTerm}".</p>
-            <button onclick="clearSearch()" class="px-3 py-1 bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-cyan text-xs rounded">
+            <button onclick="clearSearch()" class="px-3 py-1 bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-cyan text-xs rounded cursor-pointer">
               [ show all prompts ]
             </button>
           </div>
@@ -1122,7 +990,7 @@
 
         const rawTags = Array.isArray(item.tags) 
           ? item.tags 
-          : (item.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+          : (item.tags || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
 
         const isExpanded = expandedPrompts.has(item.id);
         const clampClass = isExpanded ? '' : 'prompt-clamp';
@@ -1131,12 +999,12 @@
         return `
           <article class="prompt-entry group bg-arch-900 rounded-lg arch-border overflow-hidden flex flex-col transition-all duration-200" data-id="${item.id}">
             
-            <!-- CARD HEADER: Meta, Engine (clickable), Edit & Delete -->
+            <!-- CARD HEADER: Meta, Engine, Edit & Delete -->
             <div class="px-4 py-2 bg-arch-950/80 border-b border-arch-border flex flex-wrap items-center justify-between gap-2 text-xs">
               <div class="flex items-center gap-2">
                 <button 
                   onclick="filterByTag('${(item.model || 'General').replace(/'/g, "\\'")}')"
-                  class="text-arch-cyan font-bold hover:underline hover:text-arch-neon transition-colors"
+                  class="text-arch-cyan font-bold hover:underline hover:text-arch-neon transition-colors cursor-pointer"
                   title="Filter by this engine">
                   # ${item.model || 'General'}
                 </button>
@@ -1146,12 +1014,12 @@
               <div class="flex items-center gap-2">
                 <button 
                   onclick="openEditModal('${item.id}')" 
-                  class="px-2 py-0.5 rounded border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan text-[11px] transition-colors">
+                  class="px-2 py-0.5 rounded border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan text-[11px] transition-colors cursor-pointer">
                   [✎ edit]
                 </button>
                 <button 
                   onclick="openDeleteModal('${item.id}')" 
-                  class="px-2 py-0.5 rounded border border-arch-border hover:border-arch-red text-arch-dim hover:text-arch-red text-[11px] transition-colors">
+                  class="px-2 py-0.5 rounded border border-arch-border hover:border-arch-red text-arch-dim hover:text-arch-red text-[11px] transition-colors cursor-pointer">
                   [✕ delete]
                 </button>
               </div>
@@ -1161,17 +1029,10 @@
             <div class="w-full max-w-[800px] mx-auto bg-black flex items-center justify-center overflow-hidden border-b border-arch-border">
               <img 
                 src="${item.imageUrl}" 
+                data-src="${item.imageUrl}"
                 alt="preview image" 
-                onclick="openLightbox('${item.imageUrl}')"
-                onerror="
-                  const inMem = window.imageMemoryCache && window.imageMemoryCache.get(this.getAttribute('src'));
-                  const cached = inMem || localStorage.getItem('cache_' + this.getAttribute('src'));
-                  if (cached && this.src !== cached) {
-                    this.src = cached;
-                  } else {
-                    this.src = 'https://placehold.co/800x450/070a0f/1793d1?text=Preview+Image+Unavailable';
-                  }
-                "
+                onclick="openLightbox(this.src)"
+                onerror="handleImageLoadError(this)"
                 class="w-full h-auto max-h-[500px] object-cover cursor-zoom-in hover:opacity-95 transition-opacity"
                 loading="lazy">
             </div>
@@ -1187,7 +1048,7 @@
                 <!-- One-Click Ready Copy Button -->
                 <button 
                   onclick="handlePromptCopy(this, '${item.id}')" 
-                  class="btn-copy-prompt px-3 py-1 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs tracking-tight shadow transition-all flex items-center gap-1.5 active:scale-95">
+                  class="btn-copy-prompt px-3 py-1 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs tracking-tight shadow transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer">
                   <span>❯</span>
                   <span class="btn-text">COPY</span>
                 </button>
@@ -1200,7 +1061,7 @@
                 <div class="mt-2 pt-2 border-t border-arch-border/50 flex items-center justify-between">
                   <button 
                     onclick="togglePromptExpand('${item.id}')" 
-                    class="text-[11px] text-arch-cyan hover:text-arch-neon font-bold tracking-wider hover:underline focus:outline-none flex items-center gap-1.5 transition-colors">
+                    class="text-[11px] text-arch-cyan hover:text-arch-neon font-bold tracking-wider hover:underline focus:outline-none flex items-center gap-1.5 transition-colors cursor-pointer">
                     ${isExpanded ? '<span>[^]</span> <span>collapse</span>' : '<span>(...)</span> <span>expand</span>'}
                   </button>
                   <span class="text-[10px] text-arch-dim">${isExpanded ? 'full view' : 'first 3 lines'}</span>
@@ -1238,8 +1099,9 @@
       document.getElementById('editTags').value = Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '');
 
       handleEditImagePreview(item.imageUrl || '');
-      document.getElementById('editModal').classList.remove('hidden');
-      document.getElementById('editModal').classList.add('flex');
+      const modal = document.getElementById('editModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
     }
 
     function handleEditImagePreview(url) {
@@ -1252,8 +1114,9 @@
     }
 
     function closeEditModal() {
-      document.getElementById('editModal').classList.add('hidden');
-      document.getElementById('editModal').classList.remove('flex');
+      const modal = document.getElementById('editModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
 
     function saveEditedPrompt() {
@@ -1269,10 +1132,14 @@
 
       const now = Date.now();
       const tagsInput = document.getElementById('editTags').value.trim();
-      const parsedTags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+      const parsedTags = tagsInput ? tagsInput.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+
+      let editedImg = document.getElementById('editImageUrl').value.trim() || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA';
+      if (editedImg.startsWith('/images/')) editedImg = '.' + editedImg;
+      else if (editedImg.startsWith('images/')) editedImg = './' + editedImg;
 
       promptsList[index].prompt = newPromptText;
-      promptsList[index].imageUrl = document.getElementById('editImageUrl').value.trim() || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA';
+      promptsList[index].imageUrl = editedImg;
       promptsList[index].model = document.getElementById('editModel').value.trim() || 'General';
       promptsList[index].tags = parsedTags;
       promptsList[index].updatedAt = now;
@@ -1286,13 +1153,15 @@
 
     function openDeleteModal(promptId) {
       document.getElementById('deletePromptId').value = promptId;
-      document.getElementById('deleteModal').classList.remove('hidden');
-      document.getElementById('deleteModal').classList.add('flex');
+      const modal = document.getElementById('deleteModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
     }
 
     function closeDeleteModal() {
-      document.getElementById('deleteModal').classList.add('hidden');
-      document.getElementById('deleteModal').classList.remove('flex');
+      const modal = document.getElementById('deleteModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
     }
 
     function confirmDeletePrompt() {
@@ -1323,13 +1192,13 @@
     function exportDataJSON() {
       const now = Date.now();
 
-      // Clean and guarantee exact schema structure for every entry
+      // Ensure exact GitHub schema structure
       const cleanExportData = promptsList.map(item => {
         let cleanTags = [];
         if (Array.isArray(item.tags)) {
-          cleanTags = item.tags.map(t => String(t).trim()).filter(Boolean);
+          cleanTags = item.tags.map(t => String(t).trim().toLowerCase()).filter(Boolean);
         } else if (typeof item.tags === 'string') {
-          cleanTags = item.tags.split(',').map(t => t.trim()).filter(Boolean);
+          cleanTags = item.tags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
         }
 
         const createdAt = typeof item.createdAt === 'number' ? item.createdAt : now;
@@ -1348,14 +1217,7 @@
 
       const jsonStr = JSON.stringify(cleanExportData, null, 2);
       const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'prompts.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      triggerFileDownload(blob, 'prompts.json');
       showToast('Exported prompts.json');
     }
 
@@ -1367,12 +1229,19 @@
       reader.onload = (e) => {
         try {
           const imported = JSON.parse(e.target.result);
-          if (Array.isArray(imported)) {
-            promptsList = imported;
+          const candidateList = Array.isArray(imported) 
+            ? imported 
+            : (imported.prompts || imported.data || imported.items || []);
+
+          if (Array.isArray(candidateList)) {
+            promptsList = candidateList.map(normalizePromptItem).filter(Boolean);
             saveToStorage();
             renderCategoryTags();
             renderPromptList();
-            showToast(`Imported ${imported.length} prompts`);
+            setSyncStatus('success', `loaded (${promptsList.length} items)`);
+            const banner = document.getElementById('localFileHelperBanner');
+            if (banner) banner.classList.add('hidden');
+            showToast(`Loaded ${promptsList.length} prompts`);
           } else {
             showToast('Invalid JSON file structure', true);
           }
@@ -1385,16 +1254,64 @@
       event.target.value = '';
     }
 
+    // Explicitly bind core handlers to window so inline HTML triggers never fail
+    window.toggleComposer = toggleComposer;
+    window.saveNewPrompt = saveNewPrompt;
+    window.handlePromptCopy = handlePromptCopy;
+    window.filterByTag = filterByTag;
+    window.clearSearch = clearSearch;
+    window.handleSearch = handleSearch;
+    window.openLightbox = openLightbox;
+    window.closeLightbox = closeLightbox;
+    window.openEditModal = openEditModal;
+    window.closeEditModal = closeEditModal;
+    window.saveEditedPrompt = saveEditedPrompt;
+    window.openDeleteModal = openDeleteModal;
+    window.closeDeleteModal = closeDeleteModal;
+    window.confirmDeletePrompt = confirmDeletePrompt;
+    window.exportDataJSON = exportDataJSON;
+    window.importDataJSON = importDataJSON;
+    window.handleFileSelect = handleFileSelect;
+    window.handleImagePreview = handleImagePreview;
+    window.handleEditImagePreview = handleEditImagePreview;
+    window.downloadCurrentPastedImage = downloadCurrentPastedImage;
+    window.handleImageLoadError = handleImageLoadError;
+    window.loadPrompts = loadPrompts;
+
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeEditModal();
         closeDeleteModal();
         closeLightbox();
-        if (isComposerOpen) toggleComposer(false);
+        toggleComposer(false);
       }
     });
 
     window.addEventListener('DOMContentLoaded', () => {
+      const dropZone = document.getElementById('imageDropZone');
+      if (dropZone) {
+        ['dragenter', 'dragover'].forEach(name => {
+          dropZone.addEventListener(name, (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-arch-cyan', 'bg-arch-900');
+          });
+        });
+
+        ['dragleave', 'drop'].forEach(name => {
+          dropZone.addEventListener(name, (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-arch-cyan', 'bg-arch-900');
+          });
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+          const files = e.dataTransfer.files;
+          if (files && files.length > 0) {
+            handleFileSelect(files[0]);
+          }
+        });
+      }
+
       loadPrompts();
     });
   </script>
