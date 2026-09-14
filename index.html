@@ -161,6 +161,7 @@
           <!-- COLLAPSIBLE TRIGGER BUTTON -->
           <button 
             id="toggleComposerBtn" 
+            type="button"
             onclick="toggleComposer()" 
             class="px-3.5 py-1.5 rounded bg-arch-850 hover:bg-arch-800 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan text-xs font-semibold tracking-wide transition-all shadow flex items-center gap-1.5 active:scale-95 cursor-pointer">
             <span id="composerToggleIcon" class="text-arch-cyan font-bold">+</span>
@@ -438,15 +439,15 @@
       const btn = document.getElementById('toggleComposerBtn');
       if (!section) return;
 
-      if (typeof forceState === 'boolean') {
-        isComposerOpen = forceState;
-      } else {
-        isComposerOpen = !isComposerOpen;
-      }
+      // Determine state directly from DOM to prevent boolean desync
+      const isCurrentlyOpen = !section.classList.contains('hidden') && section.style.display !== 'none';
+      const shouldOpen = typeof forceState === 'boolean' ? forceState : !isCurrentlyOpen;
 
-      if (isComposerOpen) {
+      isComposerOpen = shouldOpen;
+
+      if (shouldOpen) {
         section.classList.remove('hidden');
-        section.classList.add('flex');
+        section.style.display = 'flex';
         if (icon) icon.textContent = '✕';
         if (text) text.textContent = 'CLOSE';
         if (btn) {
@@ -455,10 +456,10 @@
         setTimeout(() => {
           const promptInput = document.getElementById('inputPromptText');
           if (promptInput) promptInput.focus();
-        }, 50);
+        }, 60);
       } else {
         section.classList.add('hidden');
-        section.classList.remove('flex');
+        section.style.display = 'none';
         if (icon) icon.textContent = '+';
         if (text) text.textContent = 'ADD PROMPT';
         if (btn) {
@@ -993,20 +994,24 @@
     }
 
     function saveNewPrompt() {
-      const promptText = document.getElementById('inputPromptText').value.trim();
-      const imageUrl = document.getElementById('inputImageUrl').value.trim();
-      const model = document.getElementById('inputModel').value.trim();
-      const tagsInput = document.getElementById('inputTags').value.trim();
+      const promptInput = document.getElementById('inputPromptText');
+      const promptText = promptInput ? promptInput.value.trim() : '';
+      const urlInput = document.getElementById('inputImageUrl');
+      const imageUrl = urlInput ? urlInput.value.trim() : '';
+      const modelInput = document.getElementById('inputModel');
+      const model = modelInput ? modelInput.value.trim() : '';
+      const tagsInput = document.getElementById('inputTags');
+      const tagsString = tagsInput ? tagsInput.value.trim() : '';
 
       if (!promptText) {
         showToast('Prompt text cannot be empty', true);
-        document.getElementById('inputPromptText').focus();
+        if (promptInput) promptInput.focus();
         return;
       }
 
       const now = Date.now();
       const randomSuffix = Math.random().toString(36).substring(2, 7);
-      const parsedTags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+      const parsedTags = tagsString ? tagsString.split(',').map(t => t.trim()).filter(Boolean) : [];
 
       // Determine final image URL
       const finalImageUrl = imageUrl || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA+ARCHIVE';
@@ -1022,38 +1027,39 @@
         dateDisplay: new Date(now).toLocaleDateString()
       };
 
-      // Cache local data URL in localStorage so the preview renders immediately offline
-      if (pendingImageDataUrl && finalImageUrl.startsWith('./images/')) {
+      // Cache local data URL in memory and storage for immediate offline preview
+      if (pendingImageDataUrl) {
         window.imageMemoryCache.set(finalImageUrl, pendingImageDataUrl);
         try {
           localStorage.setItem(`cache_${finalImageUrl}`, pendingImageDataUrl);
         } catch (e) {
-          console.warn('Local image cache quota exceeded:', e);
+          console.warn('Image cache quota note:', e);
         }
       }
 
-      // Automatically trigger download of the image file so the user can commit it to GitHub's images/ folder
-      if (pendingImageBlob && pendingImageFilename) {
-        triggerFileDownload(pendingImageBlob, pendingImageFilename);
-      }
-
-      // Add new entry to the front of the archive feed and update storage & UI
+      // Add new entry to the front of the archive feed and re-render immediately
       promptsList.unshift(newEntry);
       saveToStorage();
       renderCategoryTags();
       renderPromptList();
 
-      const pText = document.getElementById('inputPromptText');
-      const pUrl = document.getElementById('inputImageUrl');
-      const pModel = document.getElementById('inputModel');
-      const pTags = document.getElementById('inputTags');
+      // Trigger download of image file safely inside try/catch so sandbox restrictions don't block saving
+      if (pendingImageBlob && pendingImageFilename) {
+        try {
+          triggerFileDownload(pendingImageBlob, pendingImageFilename);
+        } catch (downloadErr) {
+          console.warn('Automatic download suppressed by sandbox environment:', downloadErr);
+        }
+      }
+
+      // Reset form fields
+      if (promptInput) promptInput.value = '';
+      if (urlInput) urlInput.value = '';
+      if (modelInput) modelInput.value = '';
+      if (tagsInput) tagsInput.value = '';
+
       const pBadge = document.getElementById('imageModeBadge');
       const pDlBtn = document.getElementById('downloadImageBtn');
-
-      if (pText) pText.value = '';
-      if (pUrl) pUrl.value = '';
-      if (pModel) pModel.value = '';
-      if (pTags) pTags.value = '';
       if (pBadge) pBadge.textContent = '[paste image or enter url]';
       if (pDlBtn) pDlBtn.classList.add('hidden');
 
@@ -1065,7 +1071,13 @@
       // Collapse composer automatically after saving
       toggleComposer(false);
 
-      showToast('Entry saved & image downloaded for images/ folder');
+      showToast('Entry added to archive!');
+
+      // Scroll to newly added item
+      const stream = document.getElementById('promptStream');
+      if (stream) {
+        stream.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
     function renderPromptList() {
