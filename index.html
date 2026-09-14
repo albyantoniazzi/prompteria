@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROMPTERIA</title>
+  
+  <!-- Favicon with Pin Emoji 📌 -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📌</text></svg>">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- JetBrains Mono Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            arch: {
+              950: '#070a0f',
+              900: '#0c121a',
+              850: '#111924',
+              800: '#182433',
+              border: '#1f2e42',
+              cyan: '#1793d1',
+              neon: '#38bdf8',
+              dim: '#6b829e',
+              fg: '#dbe7f5',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              red: '#ef4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+
+    body {
+      background-color: #070a0f;
+      color: #dbe7f5;
+    }
+
+    .term-bg {
+      background-color: #070a0f;
+      background-image: radial-gradient(#141e2c 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* 3-line clamp for prompt previews */
+    .prompt-clamp {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Custom terminal scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070a0f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2e42;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #1793d1;
+    }
+
+    .arch-border {
+      border: 1px solid #1f2e42;
+    }
+    .arch-border-active {
+      border: 1px solid #1793d1;
+    }
+
+    .glow-cyan {
+      text-shadow: 0 0 12px rgba(23, 147, 209, 0.45);
+    }
+  </style>
+</head>
+<body class="term-bg min-h-screen flex flex-col font-mono text-sm antialiased selection:bg-arch-cyan selection:text-arch-950">
+
+  <header class="w-full border-b border-arch-border bg-arch-950/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      
+      <!-- Main Logo Title -->
+      <div class="flex items-center gap-2">
+        <h1 onclick="clearSearch()" class="text-xl sm:text-2xl font-bold tracking-wider text-arch-cyan glow-cyan cursor-pointer" title="Click to reset filters">
+          PROMPTERIA
+        </h1>
+      </div>
+
+      <!-- Actions: Export / Import -->
+      <div class="flex items-center gap-2 text-xs">
+        <button onclick="exportDataJSON()" class="px-2.5 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-fg transition-all">
+          ↓ export
+        </button>
+        <label class="px-2.5 py-1 rounded bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-fg cursor-pointer transition-all">
+          ↑ import
+          <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
+        </label>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto w-full px-4 py-6 flex-1 flex flex-col gap-6">
+
+    <!-- TOP BAR: Search Input, Tags Browse & Add Prompt Toggle -->
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-arch-900/60 border border-arch-border rounded-lg px-4 py-2.5">
+        
+        <!-- Search filter input -->
+        <div class="relative w-full sm:w-80 flex items-center">
+          <span class="absolute left-3 text-xs text-arch-dim">❯</span>
+          <input 
+            type="text" 
+            id="searchBox" 
+            oninput="handleSearch(this.value)"
+            placeholder="filter keyword, tag, model..." 
+            class="w-full bg-arch-950 border border-arch-border rounded pl-7 pr-8 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+          <button 
+            id="clearFilterBtn"
+            onclick="clearSearch()" 
+            class="absolute right-2.5 text-xs text-arch-dim hover:text-arch-fg hidden"
+            title="Clear filter">
+            ✕
+          </button>
+        </div>
+
+        <!-- Right Side: Stats & Toggle Button -->
+        <div class="flex items-center justify-between w-full sm:w-auto gap-4">
+          <span id="counterStats" class="text-xs text-arch-dim">0 entries</span>
+          
+          <!-- COLLAPSIBLE TRIGGER BUTTON -->
+          <button 
+            id="toggleComposerBtn" 
+            onclick="toggleComposer()" 
+            class="px-3.5 py-1.5 rounded bg-arch-850 hover:bg-arch-800 border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan text-xs font-semibold tracking-wide transition-all shadow flex items-center gap-1.5 active:scale-95 cursor-pointer">
+            <span id="composerToggleIcon" class="text-arch-cyan font-bold">+</span>
+            <span id="composerToggleText">ADD PROMPT</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Category / Hashtag Chips Bar -->
+      <div id="categoryTagsBar" class="flex flex-wrap items-center gap-1.5 px-1 min-h-[22px]">
+        <!-- Injected dynamically by renderCategoryTags() -->
+      </div>
+    </div>
+
+    <!-- COLLAPSIBLE COMPOSER CONTAINER (HIDDEN BY DEFAULT) -->
+    <section 
+      id="composerSection" 
+      class="hidden bg-arch-900/95 border border-arch-cyan/60 rounded-lg p-4 sm:p-5 shadow-2xl flex-col gap-4 transition-all duration-300">
+      
+      <div class="flex items-center justify-between border-b border-arch-border/70 pb-2">
+        <div class="flex items-center gap-2 text-xs text-arch-cyan font-bold tracking-wide">
+          <span>❯</span>
+          <span>NEW_ENTRY_COMPOSER</span>
+        </div>
+        <button 
+          onclick="toggleComposer(false)" 
+          class="text-xs text-arch-dim hover:text-arch-red font-mono transition-colors">
+          [✕ close]
+        </button>
+      </div>
+
+      <!-- Image URL input & Live Thumbnail -->
+      <div class="flex flex-col sm:flex-row gap-3 items-start">
+        <div class="flex-1 w-full flex flex-col gap-1.5">
+          <label class="text-xs text-arch-dim font-medium">Image URL</label>
+          <input 
+            type="url" 
+            id="inputImageUrl" 
+            placeholder="https://images.unsplash.com/... or any public image URL"
+            oninput="handleImagePreview(this.value)"
+            class="w-full bg-arch-950 border border-arch-border rounded px-3 py-2 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+        </div>
+
+        <!-- Thumbnail preview box -->
+        <div id="newImagePreviewWrapper" class="w-full sm:w-32 h-20 bg-arch-950 border border-arch-border rounded overflow-hidden flex items-center justify-center shrink-0">
+          <img id="newImagePreview" src="" alt="preview" class="hidden w-full h-full object-cover">
+          <span id="newImagePlaceholder" class="text-[10px] text-arch-dim text-center px-1">no image preview</span>
+        </div>
+      </div>
+
+      <!-- Prompt Textarea -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-arch-dim font-medium">Prompt Content</label>
+        <textarea 
+          id="inputPromptText" 
+          rows="3" 
+          placeholder="Paste prompt text here (cinematic portrait of a cyberpunk wanderer, neon glow, octane render...)"
+          class="w-full bg-arch-950 border border-arch-border rounded p-3 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors resize-y leading-relaxed"></textarea>
+      </div>
+
+      <!-- Extra fields: Model & Tags -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] text-arch-dim">Model / Engine (optional)</label>
+          <input 
+            type="text" 
+            id="inputModel" 
+            placeholder="Midjourney v6.1 / Flux.1 / SDXL" 
+            class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] text-arch-dim">Tags (comma-separated, e.g. portrait, cyberpunk)</label>
+          <input 
+            type="text" 
+            id="inputTags" 
+            placeholder="portrait, anime, landscape, 3d" 
+            class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan transition-colors">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex justify-end items-center gap-3 pt-1">
+        <button 
+          onclick="toggleComposer(false)" 
+          class="px-4 py-1.5 rounded border border-arch-border hover:border-arch-dim text-arch-dim hover:text-arch-fg text-xs transition-colors">
+          Cancel
+        </button>
+        <button 
+          onclick="saveNewPrompt()" 
+          class="px-5 py-1.5 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs tracking-wide transition-all shadow active:scale-95 flex items-center gap-1.5">
+          <span>+</span>
+          <span>ADD TO ARCHIVE</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- PROMPTS VERTICAL STREAM CONTAINER -->
+    <section id="promptStream" class="flex flex-col gap-6">
+      <!-- Injected dynamically by renderPromptList() -->
+    </section>
+
+  </main>
+
+  <footer class="mt-auto border-t border-arch-border bg-arch-950 py-4 text-center text-xs text-arch-dim">
+    <div class="max-w-4xl mx-auto px-4 flex flex-col items-center gap-1">
+      <span class="text-arch-cyan font-bold tracking-widest text-[11px]">PROMPTERIA</span>
+      <span class="text-[10px] text-arch-dim">collection by <a href="https://albyantoniazzi.github.io/" target="_blank" rel="noopener noreferrer" class="text-arch-cyan hover:underline hover:text-arch-neon">@albyantoniazzi</a></span>
+    </div>
+  </footer>
+
+  <!-- EDIT MODAL -->
+  <div id="editModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-arch-900 border border-arch-cyan rounded-lg w-full max-w-xl p-5 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-arch-border pb-2">
+        <span class="text-xs font-bold text-arch-cyan">[EDIT_ENTRY]</span>
+        <button onclick="closeEditModal()" class="text-arch-dim hover:text-arch-red font-bold text-xs">[esc / close]</button>
+      </div>
+
+      <input type="hidden" id="editPromptId">
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-arch-dim">Image URL</label>
+        <input 
+          type="url" 
+          id="editImageUrl" 
+          oninput="handleEditImagePreview(this.value)"
+          class="w-full bg-arch-950 border border-arch-border rounded px-3 py-2 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan">
+        <div id="editPreviewWrap" class="w-full h-32 bg-arch-950 border border-arch-border rounded overflow-hidden mt-1 flex items-center justify-center">
+          <img id="editImagePreview" src="" alt="preview" class="w-full h-full object-contain">
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs text-arch-dim">Prompt</label>
+        <textarea 
+          id="editPromptText" 
+          rows="5" 
+          class="w-full bg-arch-950 border border-arch-border rounded p-3 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan resize-y"></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-arch-dim">Model / Engine</label>
+          <input type="text" id="editModel" class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs text-arch-dim">Tags (comma-separated)</label>
+          <input type="text" id="editTags" class="w-full bg-arch-950 border border-arch-border rounded px-3 py-1.5 text-xs text-arch-fg focus:outline-none focus:border-arch-cyan">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-arch-border">
+        <button onclick="closeEditModal()" class="px-3 py-1.5 rounded border border-arch-border text-arch-dim hover:text-arch-fg text-xs">Cancel</button>
+        <button onclick="saveEditedPrompt()" class="px-4 py-1.5 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="deleteModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-arch-900 border border-arch-red rounded-lg w-full max-w-sm p-5 shadow-2xl flex flex-col gap-4 text-center">
+      <div class="text-arch-red font-bold text-sm">[CONFIRM_DELETE]</div>
+      <p class="text-xs text-arch-dim">Are you sure you want to permanently delete this prompt from your archive?</p>
+      <input type="hidden" id="deletePromptId">
+      <div class="flex justify-center gap-3 pt-2">
+        <button onclick="closeDeleteModal()" class="px-3 py-1.5 rounded border border-arch-border text-arch-dim hover:text-arch-fg text-xs">Cancel</button>
+        <button onclick="confirmDeletePrompt()" class="px-4 py-1.5 rounded bg-arch-red hover:bg-red-600 text-white font-bold text-xs">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX MODAL -->
+  <div id="lightboxModal" onclick="closeLightbox()" class="fixed inset-0 z-50 bg-black/90 hidden items-center justify-center p-4 cursor-zoom-out">
+    <img id="lightboxImg" src="" alt="enlarged preview" class="max-w-full max-h-[90vh] object-contain rounded border border-arch-border">
+  </div>
+
+  <!-- NOTIFICATION TOAST -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 px-4 py-2 rounded bg-arch-cyan text-arch-950 font-bold text-xs shadow-xl opacity-0 pointer-events-none transition-all duration-300">
+    Notification
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'prompteria_archive_v3';
+    let promptsList = [];
+    const expandedPrompts = new Set();
+    let currentSearchTerm = '';
+    let isComposerOpen = false;
+
+    const DEFAULT_SAMPLE_PROMPTS = [
+      {
+        id: 'sample-1',
+        prompt: "Cinematic portrait shot of an ethereal celestial traveler in obsidian armor, intricate luminous cybernetic filigree, volumetric mist, photorealistic reflections, dark moody lighting, 8k resolution, shot on 35mm Hasselblad --ar 16:9 --style raw --v 6.1",
+        imageUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=1200&auto=format&fit=crop&q=80",
+        model: "Midjourney v6.1",
+        tags: "portrait, scifi, armor, moody",
+        createdAt: 1718000000000
+      },
+      {
+        id: 'sample-2',
+        prompt: "Minimalist brutalist architecture surrounded by an overgrown midnight pine forest, misty rain, amber interior lamp lighting, harsh geometrical concrete angles, hyper-detailed architectural photograph, architectural digest style.",
+        imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&auto=format&fit=crop&q=80",
+        model: "Flux.1 Dev",
+        tags: "architecture, minimalist, brutalism",
+        createdAt: 1718100000000
+      }
+    ];
+
+    /* Toggle Add Prompt composer visibility */
+    function toggleComposer(forceState = null) {
+      const section = document.getElementById('composerSection');
+      const icon = document.getElementById('composerToggleIcon');
+      const text = document.getElementById('composerToggleText');
+      const btn = document.getElementById('toggleComposerBtn');
+
+      isComposerOpen = forceState !== null ? forceState : !isComposerOpen;
+
+      if (isComposerOpen) {
+        section.classList.remove('hidden');
+        section.classList.add('flex');
+        icon.textContent = '✕';
+        text.textContent = 'CLOSE COMPOSER';
+        btn.classList.add('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
+        btn.classList.remove('text-arch-dim', 'bg-arch-850');
+        document.getElementById('inputImageUrl').focus();
+      } else {
+        section.classList.add('hidden');
+        section.classList.remove('flex');
+        icon.textContent = '+';
+        text.textContent = 'ADD PROMPT';
+        btn.classList.remove('border-arch-cyan', 'text-arch-cyan', 'bg-arch-900');
+        btn.classList.add('text-arch-dim', 'bg-arch-850');
+      }
+    }
+
+    async function loadPrompts() {
+      // 1. Try to load from remote prompts.json (if hosted on GitHub Pages)
+      try {
+        const response = await fetch('prompts.json', { cache: 'no-cache' });
+        if (response.ok) {
+          const remoteData = await response.json();
+          if (Array.isArray(remoteData) && remoteData.length > 0) {
+            promptsList = remoteData;
+            renderCategoryTags();
+            renderPromptList();
+            return;
+          }
+        }
+      } catch (e) {
+        // Not hosted with prompts.json or running locally without server; fallback to local storage
+      }
+
+      // 2. Fallback to localStorage or sample presets
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          promptsList = JSON.parse(stored);
+        } else {
+          const legacy = localStorage.getItem('prompteria_archive_v2') || localStorage.getItem('prompteria_archive');
+          if (legacy) {
+            promptsList = JSON.parse(legacy);
+          } else {
+            promptsList = [...DEFAULT_SAMPLE_PROMPTS];
+          }
+          saveToStorage();
+        }
+      } catch (err) {
+        console.error('Error loading prompts:', err);
+        promptsList = [...DEFAULT_SAMPLE_PROMPTS];
+      }
+
+      renderCategoryTags();
+      renderPromptList();
+    }
+
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(promptsList));
+      } catch (err) {
+        console.error('Storage write error:', err);
+      }
+    }
+
+    /* Clickable Category Tags Rendering & Filtering */
+    function renderCategoryTags() {
+      const bar = document.getElementById('categoryTagsBar');
+      if (!bar) return;
+
+      const tagSet = new Set();
+      promptsList.forEach(item => {
+        if (item.tags) {
+          const tags = Array.isArray(item.tags) 
+            ? item.tags 
+            : item.tags.split(',').map(t => t.trim()).filter(Boolean);
+          tags.forEach(t => tagSet.add(t.toLowerCase()));
+        }
+      });
+
+      const uniqueTags = Array.from(tagSet).sort();
+      if (uniqueTags.length === 0) {
+        bar.innerHTML = '';
+        return;
+      }
+
+      const activeTag = currentSearchTerm.trim().toLowerCase();
+
+      bar.innerHTML = `
+        <span class="text-arch-dim text-[10px] mr-1">topics:</span>
+        ${uniqueTags.map(tag => {
+          const isActive = activeTag === tag;
+          return `
+            <button 
+              onclick="filterByTag('${tag.replace(/'/g, "\\'")}')" 
+              class="px-2 py-0.5 rounded text-[11px] transition-all border ${
+                isActive 
+                  ? 'bg-arch-cyan text-arch-950 border-arch-cyan font-bold' 
+                  : 'bg-arch-850 hover:bg-arch-800 text-arch-dim hover:text-arch-cyan border-arch-border hover:border-arch-cyan'
+              }">
+              #${tag}
+            </button>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function filterByTag(tag) {
+      const searchBox = document.getElementById('searchBox');
+      if (currentSearchTerm.toLowerCase() === tag.toLowerCase()) {
+        clearSearch();
+      } else {
+        searchBox.value = tag;
+        handleSearch(tag);
+        const feed = document.getElementById('promptStream');
+        if (feed) {
+          feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+
+    function clearSearch() {
+      const searchBox = document.getElementById('searchBox');
+      searchBox.value = '';
+      handleSearch('');
+    }
+
+    function handleSearch(term) {
+      currentSearchTerm = term;
+      renderCategoryTags();
+      renderPromptList();
+    }
+
+    function togglePromptExpand(promptId) {
+      if (expandedPrompts.has(promptId)) {
+        expandedPrompts.delete(promptId);
+      } else {
+        expandedPrompts.add(promptId);
+      }
+      renderPromptList();
+    }
+
+    function showToast(text, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = text;
+      toast.className = `fixed bottom-6 right-6 z-50 px-4 py-2 rounded font-bold text-xs shadow-xl transition-all duration-300 opacity-100 ${
+        isError ? 'bg-arch-red text-white' : 'bg-arch-cyan text-arch-950'
+      }`;
+      setTimeout(() => {
+        toast.className = 'fixed bottom-6 right-6 z-50 px-4 py-2 rounded bg-arch-cyan text-arch-950 font-bold text-xs shadow-xl opacity-0 pointer-events-none transition-all duration-300';
+      }, 2000);
+    }
+
+    function copyTextToClipboard(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      textArea.style.top = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      let successful = false;
+      try {
+        successful = document.execCommand('copy');
+      } catch (err) {
+        console.warn('execCommand fallback', err);
+      }
+      document.body.removeChild(textArea);
+
+      if (!successful && navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text);
+      }
+      return Promise.resolve(successful);
+    }
+
+    function handlePromptCopy(buttonElement, promptId) {
+      const item = promptsList.find(p => p.id === promptId);
+      if (!item) return;
+
+      copyTextToClipboard(item.prompt).then(() => {
+        const textSpan = buttonElement.querySelector('.btn-text');
+        const prevText = textSpan ? textSpan.textContent : 'COPY';
+        if (textSpan) textSpan.textContent = 'COPIED!';
+        buttonElement.classList.add('!bg-arch-emerald', '!text-white');
+
+        setTimeout(() => {
+          if (textSpan) textSpan.textContent = prevText;
+          buttonElement.classList.remove('!bg-arch-emerald', '!text-white');
+        }, 1500);
+
+        showToast('Prompt copied to clipboard');
+      }).catch(() => {
+        showToast('Failed to copy', true);
+      });
+    }
+
+    function handleImagePreview(url) {
+      const img = document.getElementById('newImagePreview');
+      const placeholder = document.getElementById('newImagePlaceholder');
+      if (url && url.trim().length > 4) {
+        img.src = url.trim();
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        img.onerror = () => {
+          img.classList.add('hidden');
+          placeholder.classList.remove('hidden');
+          placeholder.textContent = 'invalid image url';
+        };
+        img.onload = () => {
+          img.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+        };
+      } else {
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        placeholder.textContent = 'no image preview';
+      }
+    }
+
+    function saveNewPrompt() {
+      const promptText = document.getElementById('inputPromptText').value.trim();
+      const imageUrl = document.getElementById('inputImageUrl').value.trim();
+      const model = document.getElementById('inputModel').value.trim();
+      const tags = document.getElementById('inputTags').value.trim();
+
+      if (!promptText) {
+        showToast('Prompt text cannot be empty', true);
+        document.getElementById('inputPromptText').focus();
+        return;
+      }
+
+      const newEntry = {
+        id: 'p-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+        prompt: promptText,
+        imageUrl: imageUrl || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA+ARCHIVE',
+        model: model || 'General Prompt',
+        tags: tags || '',
+        createdAt: Date.now()
+      };
+
+      promptsList.unshift(newEntry);
+      saveToStorage();
+      renderCategoryTags();
+      renderPromptList();
+
+      document.getElementById('inputPromptText').value = '';
+      document.getElementById('inputImageUrl').value = '';
+      document.getElementById('inputModel').value = '';
+      document.getElementById('inputTags').value = '';
+      handleImagePreview('');
+
+      // Collapse composer automatically after saving
+      toggleComposer(false);
+
+      showToast('Entry added to archive');
+    }
+
+    function renderPromptList() {
+      const container = document.getElementById('promptStream');
+      const counter = document.getElementById('counterStats');
+      const clearBtn = document.getElementById('clearFilterBtn');
+
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', !currentSearchTerm);
+      }
+
+      const filterTerm = currentSearchTerm.toLowerCase();
+      const filtered = promptsList.filter(item => {
+        if (!filterTerm) return true;
+        const pMatch = (item.prompt || '').toLowerCase().includes(filterTerm);
+        const mMatch = (item.model || '').toLowerCase().includes(filterTerm);
+        const tagsString = Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '');
+        const tMatch = tagsString.toLowerCase().includes(filterTerm);
+        return pMatch || mMatch || tMatch;
+      });
+
+      counter.textContent = `${filtered.length} / ${promptsList.length} entries`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center border border-dashed border-arch-border rounded-lg text-arch-dim">
+            <div class="text-base font-bold text-arch-cyan mb-1">NO ENTRIES FOUND</div>
+            <p class="text-xs mb-3">No matching prompts found for "${currentSearchTerm}".</p>
+            <button onclick="clearSearch()" class="px-3 py-1 bg-arch-850 border border-arch-border hover:border-arch-cyan text-arch-cyan text-xs rounded">
+              [ show all prompts ]
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const safePromptEscaped = (item.prompt || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+
+        const rawTags = Array.isArray(item.tags) 
+          ? item.tags 
+          : (item.tags || '').split(',').map(t => t.trim()).filter(Boolean);
+
+        const isExpanded = expandedPrompts.has(item.id);
+        const clampClass = isExpanded ? '' : 'prompt-clamp';
+
+        return `
+          <article class="prompt-entry group bg-arch-900 rounded-lg arch-border overflow-hidden flex flex-col transition-all duration-200" data-id="${item.id}">
+            
+            <!-- CARD HEADER: Meta, Engine (clickable), Edit & Delete -->
+            <div class="px-4 py-2 bg-arch-950/80 border-b border-arch-border flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2">
+                <button 
+                  onclick="filterByTag('${(item.model || 'General').replace(/'/g, "\\'")}')"
+                  class="text-arch-cyan font-bold hover:underline hover:text-arch-neon transition-colors"
+                  title="Filter by this engine">
+                  # ${item.model || 'General'}
+                </button>
+                <span class="text-arch-dim text-[11px]">• ${new Date(item.createdAt || Date.now()).toLocaleDateString()}</span>
+              </div>
+              
+              <div class="flex items-center gap-2">
+                <button 
+                  onclick="openEditModal('${item.id}')" 
+                  class="px-2 py-0.5 rounded border border-arch-border hover:border-arch-cyan text-arch-dim hover:text-arch-cyan text-[11px] transition-colors">
+                  [✎ edit]
+                </button>
+                <button 
+                  onclick="openDeleteModal('${item.id}')" 
+                  class="px-2 py-0.5 rounded border border-arch-border hover:border-arch-red text-arch-dim hover:text-arch-red text-[11px] transition-colors">
+                  [✕ delete]
+                </button>
+              </div>
+            </div>
+
+            <!-- 800PX MAX PREVIEW IMAGE FRAME -->
+            <div class="w-full max-w-[800px] mx-auto bg-black flex items-center justify-center overflow-hidden border-b border-arch-border">
+              <img 
+                src="${item.imageUrl}" 
+                alt="preview image" 
+                onclick="openLightbox('${item.imageUrl}')"
+                onerror="this.src='https://placehold.co/800x450/070a0f/1793d1?text=Preview+Image+Unavailable'"
+                class="w-full h-auto max-h-[500px] object-cover cursor-zoom-in hover:opacity-95 transition-opacity"
+                loading="lazy">
+            </div>
+
+            <!-- PROMPT CODE BOX -->
+            <div class="p-4 flex flex-col gap-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 text-xs text-arch-dim">
+                  <span class="text-arch-cyan font-bold">[PROMPT]</span>
+                  <span class="text-[10px]">${item.prompt ? item.prompt.length : 0} chars</span>
+                </div>
+
+                <!-- One-Click Ready Copy Button -->
+                <button 
+                  onclick="handlePromptCopy(this, '${item.id}')" 
+                  class="btn-copy-prompt px-3 py-1 rounded bg-arch-cyan hover:bg-arch-neon text-arch-950 font-bold text-xs tracking-tight shadow transition-all flex items-center gap-1.5 active:scale-95">
+                  <span>❯</span>
+                  <span class="btn-text">COPY</span>
+                </button>
+              </div>
+
+              <!-- Monospace Code Frame with 3-line clamp & expand toggle -->
+              <div class="relative bg-arch-950 rounded p-3.5 border border-arch-border shadow-inner">
+                <pre class="text-xs text-arch-fg whitespace-pre-wrap break-words leading-relaxed select-all ${clampClass}">${safePromptEscaped}</pre>
+                
+                <div class="mt-2 pt-2 border-t border-arch-border/50 flex items-center justify-between">
+                  <button 
+                    onclick="togglePromptExpand('${item.id}')" 
+                    class="text-[11px] text-arch-cyan hover:text-arch-neon font-bold tracking-wider hover:underline focus:outline-none flex items-center gap-1.5 transition-colors">
+                    ${isExpanded ? '<span>[^]</span> <span>collapse</span>' : '<span>(...)</span> <span>expand</span>'}
+                  </button>
+                  <span class="text-[10px] text-arch-dim">${isExpanded ? 'full view' : 'first 3 lines'}</span>
+                </div>
+              </div>
+
+              <!-- CLICKABLE TAGS LIST -->
+              ${rawTags.length > 0 ? `
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                  ${rawTags.map(tag => `
+                    <button 
+                      onclick="filterByTag('${tag.replace(/'/g, "\\'")}')" 
+                      class="text-[10px] bg-arch-850 hover:bg-arch-800 text-arch-dim hover:text-arch-cyan border border-arch-border hover:border-arch-cyan px-2 py-0.5 rounded transition-all cursor-pointer">
+                      #${tag}
+                    </button>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+            </div>
+
+          </article>
+        `;
+      }).join('');
+    }
+
+    function openEditModal(promptId) {
+      const item = promptsList.find(p => p.id === promptId);
+      if (!item) return;
+
+      document.getElementById('editPromptId').value = item.id;
+      document.getElementById('editImageUrl').value = item.imageUrl || '';
+      document.getElementById('editPromptText').value = item.prompt || '';
+      document.getElementById('editModel').value = item.model || '';
+      document.getElementById('editTags').value = Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || '');
+
+      handleEditImagePreview(item.imageUrl || '');
+      document.getElementById('editModal').classList.remove('hidden');
+      document.getElementById('editModal').classList.add('flex');
+    }
+
+    function handleEditImagePreview(url) {
+      const img = document.getElementById('editImagePreview');
+      if (url && url.trim()) {
+        img.src = url.trim();
+      } else {
+        img.src = 'https://placehold.co/800x450/070a0f/1793d1?text=Preview+Image';
+      }
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+      document.getElementById('editModal').classList.remove('flex');
+    }
+
+    function saveEditedPrompt() {
+      const id = document.getElementById('editPromptId').value;
+      const index = promptsList.findIndex(p => p.id === id);
+      if (index === -1) return;
+
+      const newPromptText = document.getElementById('editPromptText').value.trim();
+      if (!newPromptText) {
+        showToast('Prompt text cannot be empty', true);
+        return;
+      }
+
+      promptsList[index].prompt = newPromptText;
+      promptsList[index].imageUrl = document.getElementById('editImageUrl').value.trim() || 'https://placehold.co/800x450/070a0f/1793d1?text=PROMPTERIA';
+      promptsList[index].model = document.getElementById('editModel').value.trim() || 'General';
+      promptsList[index].tags = document.getElementById('editTags').value.trim();
+
+      saveToStorage();
+      renderCategoryTags();
+      renderPromptList();
+      closeEditModal();
+      showToast('Prompt updated');
+    }
+
+    function openDeleteModal(promptId) {
+      document.getElementById('deletePromptId').value = promptId;
+      document.getElementById('deleteModal').classList.remove('hidden');
+      document.getElementById('deleteModal').classList.add('flex');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.add('hidden');
+      document.getElementById('deleteModal').classList.remove('flex');
+    }
+
+    function confirmDeletePrompt() {
+      const id = document.getElementById('deletePromptId').value;
+      promptsList = promptsList.filter(p => p.id !== id);
+      expandedPrompts.delete(id);
+      saveToStorage();
+      renderCategoryTags();
+      renderPromptList();
+      closeDeleteModal();
+      showToast('Prompt deleted');
+    }
+
+    function openLightbox(url) {
+      const lb = document.getElementById('lightboxModal');
+      const img = document.getElementById('lightboxImg');
+      img.src = url;
+      lb.classList.remove('hidden');
+      lb.classList.add('flex');
+    }
+
+    function closeLightbox() {
+      const lb = document.getElementById('lightboxModal');
+      lb.classList.add('hidden');
+      lb.classList.remove('flex');
+    }
+
+    function exportDataJSON() {
+      const jsonStr = JSON.stringify(promptsList, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prompts.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported prompts.json');
+    }
+
+    function importDataJSON(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            promptsList = imported;
+            saveToStorage();
+            renderCategoryTags();
+            renderPromptList();
+            showToast(`Imported ${imported.length} prompts`);
+          } else {
+            showToast('Invalid JSON file structure', true);
+          }
+        } catch (err) {
+          console.error(err);
+          showToast('Failed to parse JSON', true);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeEditModal();
+        closeDeleteModal();
+        closeLightbox();
+        if (isComposerOpen) toggleComposer(false);
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadPrompts();
+    });
+  </script>
+</body>
+</html>
