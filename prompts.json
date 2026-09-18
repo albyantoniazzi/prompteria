@@ -1,5 +1,17 @@
 [
   {
+    "id": "pr_1789702338798_2x11e",
+    "createdAt": 1789702338798,
+    "imageUrl": "./images/pr_1789702325942_ffdge.webp",
+    "prompt": "Use the uploaded image as the sole source for identity,content,composition,and color.Preserve each subject's pose,expression,clothing,and objects directly involved in the action.Keep face shape,hairstyle,eyewear,facial hair,age,and gender presentation recognizable.Composition:Keep the source framing,crop,camera angle,subject scale,positions,overlaps,and gesture.Do not mirror,recenter,zoom,or rearrange content.Isolate the subject and essential interacting props against open paper.Drawing:Redraw everything as an extremely simple naive editorial doodle using broad felt-tip and opaque paint markers.Reduce bodies,hair,clothes,animals,and props into large shapes.Inflate bulky forms and compress heads,hands,and details.Use awkward bends and charming errors while keeping the action clear.Make the head small relative to the torso.Reduce eyes to dots or loops,nose to one crooked mark,and mouth to a short stroke.Use few lines for folds,fur,feet,and surfaces.Linework:Choose the clearest saturated non-neutral source hue as contour ink.Brighten it into a vivid medium-value marker tone.Draw with a broad rounded nib and continuous one-pass lines with gentle wobble,uneven pressure,blunt ends,and crooked joins.Main contours are 1.7-2.3 times thicker than internal marks.Limit each large shape to 1-3 interior strokes.No retracing,dense hatching,double lines,thin outlines,or vector curves.Color and fill:Reduce the source palette to one dominant object color and 1-2 sampled accents.Keep most secondary objects,light clothing,skin highlights,and structural props paper-white with colored outlines.Use dark tones only for tiny facial anchors.Apply the main color with wide overlapping marker sweeps,visible bands,uneven density,and narrow paper gaps.Cover 65-80% of the main colored shape;accents receive 10-35% and pale areas 0-10%.Allow slight misregistration and edge spill.Do not fill every object.Show form through overlap and a few crease lines,never shading.Background:Use blank warm off-white paper with subtle tooth.Remove walls,floors,ground planes,environmental detail,cast shadows,and gray bases.Retain only objects supporting or interacting with the subject.Draw them as sparse open contours with little or no fill.Keep at least 70% visually unmarked.Style:Naive outsider illustration,childlike broad-marker portrait,editorial fashion doodle,and rough poster-marker coloring.Strictly flat 2D,bold,sparse,playful,unbalanced,and unfinished.Prioritize simple silhouettes,white space,and one-pass energy.Negative:No added or missing subjects,essential props,or limbs.No changed pose,crop,camera,identity,or major color relationship.No realistic face,polished anatomy,thin clean contours,fully colored secondary objects,gray floor patch,dense background,colored-pencil texture,wax-crayon grain,pencil hatching,alcohol-marker gradients,watercolor,clean vector art,3D,anime,manga,gloss,shadows,text,border,logo,watermark,or UI",
+    "model": "chatgpt",
+    "tags": [
+      "illustration",
+      "drawing"
+    ],
+    "updatedAt": 1789702338798
+  },
+  {
     "id": "pr_1789552540360_z7ixv",
     "createdAt": 1789552540360,
     "imageUrl": "./images/pr_1789552515597_ncqmr.webp",
